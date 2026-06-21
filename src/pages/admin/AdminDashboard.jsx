@@ -16,28 +16,58 @@ const AdminDashboard = () => {
 
   const fetchDashboardData = async () => {
     setLoading(true);
+    
+    const getSortableDate = (val) => {
+      if (!val) return 0;
+      if (typeof val.toDate === 'function') return val.toDate().getTime();
+      return new Date(val).getTime();
+    };
+
+    // 1. Fetch Orders
     try {
-      // 1. Fetch Orders
       const ordersSnapshot = await getDocs(collection(db, "orders"));
       const ordersList = ordersSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
-      })).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      })).sort((a, b) => getSortableDate(b.createdAt) - getSortableDate(a.createdAt));
       setOrders(ordersList);
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+    }
 
-      // 2. Fetch Products Count
+    // 2. Fetch Products Count
+    try {
       const productsSnapshot = await getDocs(collection(db, "products"));
       setProductsCount(productsSnapshot.size);
+    } catch (error) {
+      console.error("Error fetching products count:", error);
+    }
 
-      // 3. Fetch Users Count
+    // 3. Fetch Users Count
+    try {
       const usersSnapshot = await getDocs(collection(db, "users"));
       setUsersCount(usersSnapshot.size);
-
     } catch (error) {
-      console.error("Error fetching admin dashboard data:", error);
-    } finally {
-      setLoading(false);
+      console.error("Error fetching users count:", error);
     }
+
+    setLoading(false);
+  };
+
+  const formatOrderDate = (createdAt) => {
+    if (!createdAt) return 'N/A';
+    let date;
+    if (typeof createdAt.toDate === 'function') {
+      date = createdAt.toDate();
+    } else {
+      date = new Date(createdAt);
+    }
+    if (isNaN(date.getTime())) {
+      return 'Invalid Date';
+    }
+    return date.toLocaleDateString('en-IN', {
+      day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
   };
 
   const handleStatusChange = async (orderId, newStatus) => {
@@ -159,9 +189,7 @@ const AdminDashboard = () => {
                     <td style={{ padding: '1rem 0.5rem' }}>
                       <div style={{ fontWeight: '600', fontSize: '0.85rem' }}>{order.id}</div>
                       <div style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', marginTop: '0.25rem' }}>
-                        {new Date(order.createdAt).toLocaleDateString('en-IN', {
-                          day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
-                        })}
+                        {formatOrderDate(order.createdAt)}
                       </div>
                     </td>
                     <td style={{ padding: '1rem 0.5rem' }}>
