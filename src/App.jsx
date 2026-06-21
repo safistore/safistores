@@ -17,6 +17,8 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
+import Orders from './pages/Orders';
+import ForgotPassword from './pages/ForgotPassword';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -71,6 +73,8 @@ function App() {
             <Route path="/signup" element={<Signup user={user} />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/orders" element={user ? <Orders /> : <Navigate to="/login" />} />
             
             {/* Protected Admin Routes */}
             <Route 
