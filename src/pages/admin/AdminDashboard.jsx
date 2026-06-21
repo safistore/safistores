@@ -7,7 +7,7 @@ import { db } from '../../firebase';
 const AdminDashboard = () => {
   const [orders, setOrders] = useState([]);
   const [productsCount, setProductsCount] = useState(0);
-  const [usersCount, setUsersCount] = useState(0);
+  const [usersCount, setUsersCount] = useState('—');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -48,7 +48,13 @@ const AdminDashboard = () => {
       const usersSnapshot = await getDocs(collection(db, "users"));
       setUsersCount(usersSnapshot.size);
     } catch (error) {
-      console.error("Error fetching users count:", error);
+      if (error.code === 'permission-denied') {
+        console.warn("Users count restricted by Firebase security rules.");
+        setUsersCount('Restricted');
+      } else {
+        console.error("Error fetching users count:", error);
+        setUsersCount('Error');
+      }
     }
 
     setLoading(false);
@@ -68,6 +74,23 @@ const AdminDashboard = () => {
     return date.toLocaleDateString('en-IN', {
       day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
     });
+  };
+
+  const formatShippingAddress = (address) => {
+    if (!address) return 'No Address';
+    if (typeof address === 'string') return address;
+    if (typeof address === 'object') {
+      const parts = [
+        address.fullName || address.customerName,
+        address.street,
+        address.city,
+        address.state,
+        address.zipCode || address.pincode,
+        address.phone
+      ].filter(Boolean);
+      return parts.length > 0 ? parts.join(', ') : JSON.stringify(address);
+    }
+    return String(address);
   };
 
   const handleStatusChange = async (orderId, newStatus) => {
@@ -195,8 +218,11 @@ const AdminDashboard = () => {
                     <td style={{ padding: '1rem 0.5rem' }}>
                       <div style={{ fontWeight: '500' }}>{order.customerName}</div>
                       <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{order.customerPhone}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={order.shippingAddress}>
-                        {order.shippingAddress}
+                      <div 
+                        style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} 
+                        title={formatShippingAddress(order.shippingAddress)}
+                      >
+                        {formatShippingAddress(order.shippingAddress)}
                       </div>
                     </td>
                     <td style={{ padding: '1rem 0.5rem' }}>
