@@ -45,6 +45,9 @@ const Home = () => {
         marginBottom: '4rem'
       }}>
         <div className="container">
+          <div className="flex-center" style={{ marginBottom: '1.5rem' }}>
+            <img src="/safi.png" alt="Safi Store Logo" style={{ height: '90px', objectFit: 'contain' }} />
+          </div>
           <h1 className="heading-lg" style={{ marginBottom: '1rem', fontFamily: 'serif' }}>
             Nish Fashion
           </h1>
