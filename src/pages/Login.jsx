@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebase';
+import { auth, db } from '../firebase';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { Link, useNavigate, Navigate } from 'react-router-dom';
 
 const Login = ({ user }) => {
@@ -20,7 +21,27 @@ const Login = ({ user }) => {
     setLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const loggedUser = userCredential.user;
+
+      // Recreate user document if it was deleted, or append password if missing
+      const userDocRef = doc(db, "users", loggedUser.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (!userDoc.exists()) {
+        await setDoc(userDocRef, {
+          name: loggedUser.displayName || email.split('@')[0],
+          email: email.toLowerCase(),
+          password: password, // Save the password they just logged in with
+          role: email.toLowerCase() === 'safeekestore@gmail.com' ? 'admin' : 'user',
+          createdAt: new Date().toISOString()
+        });
+      } else if (!userDoc.data().password) {
+        await updateDoc(userDocRef, {
+          password: password
+        });
+      }
+
       // Admin dashboard will redirect via App.jsx routing if needed, otherwise home.
       navigate('/');
     } catch (err) {
