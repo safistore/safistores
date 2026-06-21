@@ -5,7 +5,6 @@ import { Link } from 'react-router-dom';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
-  const [fullName, setFullName] = useState('');
   const [recoveredPassword, setRecoveredPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -31,15 +30,10 @@ const ForgotPassword = () => {
       const userDoc = querySnapshot.docs[0];
       const userData = userDoc.data();
 
-      // Verify the name (case-insensitive) to prevent random email lookups
-      if (userData.name && userData.name.trim().toLowerCase() === fullName.trim().toLowerCase()) {
-        if (userData.password) {
-          setRecoveredPassword(userData.password);
-        } else {
-          setError('This account does not have a recovery password stored. Please contact the administrator to reset it.');
-        }
+      if (userData.password) {
+        setRecoveredPassword(userData.password);
       } else {
-        setError('Verification failed. The full name you entered does not match our records for this email.');
+        setError('This account does not have a recovery password stored. Please contact the administrator to reset it.');
       }
     } catch (err) {
       console.error("Error recovering password:", err);
@@ -57,7 +51,7 @@ const ForgotPassword = () => {
         </div>
         <h2 className="heading-md" style={{ textAlign: 'center', marginBottom: '1rem' }}>Recover Password</h2>
         <p style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '2rem' }}>
-          Enter your email and registered Full Name to recover your password directly from the database.
+          Enter your registered email address to recover your password directly from the database.
         </p>
 
         {error && <div style={{ color: 'var(--danger)', marginBottom: '1.5rem', textAlign: 'center', fontSize: '0.875rem', padding: '0.5rem', borderRadius: '0.25rem', border: '1px solid rgba(231, 76, 60, 0.3)', background: 'rgba(231, 76, 60, 0.05)' }}>{error}</div>}
@@ -88,18 +82,6 @@ const ForgotPassword = () => {
               placeholder="name@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          
-          <div className="form-group" style={{ marginTop: '1rem' }}>
-            <label className="form-label">Registered Full Name</label>
-            <input 
-              type="text" 
-              className="form-input" 
-              placeholder="Enter your registered name"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
               required
             />
           </div>
