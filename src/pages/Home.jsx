@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '../firebase';
 import ProductCard from '../components/ProductCard';
+import safiLogo from '../assets/safi.png'; // Imported asset
 
 const Home = () => {
   const [products, setProducts] = useState([]);
@@ -46,7 +47,7 @@ const Home = () => {
       }}>
         <div className="container">
           <div className="flex-center" style={{ marginBottom: '1.5rem' }}>
-            <img src="/safi.png" alt="Safi Store Logo" style={{ height: '90px', objectFit: 'contain' }} />
+            <img src={safiLogo} alt="Safi Store Logo" style={{ height: '90px', objectFit: 'contain' }} />
           </div>
           <h1 className="heading-lg" style={{ marginBottom: '1rem', fontFamily: 'serif' }}>
             Nish Fashion
