@@ -3,6 +3,7 @@ import { ShoppingCart, User, LogOut, LayoutDashboard } from 'lucide-react';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
 import { useCart } from '../context/CartContext';
+import safiLogo from '../assets/safi.png'; // Imported Logo Asset
 
 const Navbar = ({ user, isAdmin }) => {
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ const Navbar = ({ user, isAdmin }) => {
     <nav className="navbar">
       <div className="container flex-between">
         <Link to="/" className="logo flex-center" style={{ gap: '10px' }}>
-          <img src="/safi.png" alt="Safi Store Logo" style={{ height: '45px', objectFit: 'contain' }} />
+          <img src={safiLogo} alt="Safi Store Logo" style={{ height: '45px', objectFit: 'contain' }} />
         </Link>
         
         <div className="nav-links flex-center" style={{ gap: '1.5rem' }}>
