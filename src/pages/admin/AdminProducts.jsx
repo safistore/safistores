@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { collection, addDoc, getDocs, deleteDoc, doc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { db, storage } from '../../firebase';
+import { db } from '../../firebase';
 import { Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -44,13 +43,23 @@ const AdminProducts = () => {
       let imageUrl = '';
 
       if (imageFile) {
-        // Upload image to Firebase Storage
-        const fileExtension = imageFile.name.split('.').pop();
-        const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExtension}`;
-        const storageRef = ref(storage, `products/${fileName}`);
-        
-        const uploadResult = await uploadBytes(storageRef, imageFile);
-        imageUrl = await getDownloadURL(uploadResult.ref);
+        // Upload image to Cloudinary
+        const formData = new FormData();
+        formData.append('file', imageFile);
+        formData.append('upload_preset', 'safistore_preset');
+
+        const response = await fetch('https://api.cloudinary.com/v1_1/dtqibelpn/image/upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error?.message || 'Failed to upload image to Cloudinary');
+        }
+
+        const data = await response.json();
+        imageUrl = data.secure_url;
       }
 
       // Add product to Firestore
@@ -88,15 +97,8 @@ const AdminProducts = () => {
         // Delete document from Firestore
         await deleteDoc(doc(db, "products", id));
         
-        // Delete image from Firebase Storage if it exists
-        if (imageUrl && imageUrl.includes('firebasestorage.googleapis.com')) {
-          try {
-            const imageRef = ref(storage, imageUrl);
-            await deleteObject(imageRef);
-          } catch (storageError) {
-            console.error("Error deleting image from storage:", storageError);
-          }
-        }
+        // Note: For Cloudinary frontend uploads, deletion is typically handled 
+        // via a backend server or a scheduled cleanup to keep credentials secure.
         
         fetchProducts();
       } catch (error) {
