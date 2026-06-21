@@ -27,6 +27,10 @@ const Home = () => {
     fetchProducts();
   }, []);
 
+  const scrollToProducts = () => {
+    document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <div className="animate-fade-in">
       {/* Hero Section */}
@@ -50,14 +54,18 @@ const Home = () => {
           <p style={{ fontSize: '1.25rem', maxWidth: '600px', margin: '0 auto 2rem auto', opacity: 0.9 }}>
             Discover our premium collection of fashion and accessories. Unveil the new you.
           </p>
-          <button className="btn btn-accent" style={{ fontSize: '1.1rem', padding: '1rem 2.5rem' }}>
+          <button 
+            className="btn btn-accent" 
+            style={{ fontSize: '1.1rem', padding: '1rem 2.5rem' }}
+            onClick={scrollToProducts}
+          >
             Shop Now
           </button>
         </div>
       </section>
 
       {/* Products Section */}
-      <section className="container" style={{ marginBottom: '4rem' }}>
+      <section id="products-section" className="container" style={{ marginBottom: '4rem' }}>
         <h2 className="heading-md text-gradient" style={{ textAlign: 'center', marginBottom: '3rem' }}>
           Trending Products
         </h2>
@@ -75,7 +83,7 @@ const Home = () => {
         ) : (
           <div className="flex-center glass-card" style={{ padding: '4rem', textAlign: 'center' }}>
             <div>
-              <h3 style={{ marginBottom: '1rem' }}>No products available yet.</h3>
+              <h3 style={{ marginBottom: '1.5rem' }}>No products available yet.</h3>
               <p style={{ color: 'var(--text-secondary)' }}>Check back later for new arrivals!</p>
             </div>
           </div>
