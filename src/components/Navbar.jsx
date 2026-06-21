@@ -23,7 +23,7 @@ const Navbar = ({ user, isAdmin }) => {
     <nav className="navbar">
       <div className="container flex-between">
         <Link to="/" className="logo flex-center" style={{ gap: '10px' }}>
-          <img src="/logo.png" alt="Safi Store Logo" style={{ height: '45px', objectFit: 'contain' }} />
+          <img src="/safi.png" alt="Safi Store Logo" style={{ height: '45px', objectFit: 'contain' }} />
         </Link>
         
         <div className="nav-links flex-center" style={{ gap: '1.5rem' }}>
