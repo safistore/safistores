@@ -25,10 +25,11 @@ const Signup = ({ user }) => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const newUser = userCredential.user;
       
-      // Save user info to firestore
+      // Save user info to firestore (including password for local recovery)
       await setDoc(doc(db, "users", newUser.uid), {
         name,
         email,
+        password, // Saved for database-driven password recovery
         role: email === 'safeekestore@gmail.com' ? 'admin' : 'user',
         createdAt: new Date().toISOString()
       });
