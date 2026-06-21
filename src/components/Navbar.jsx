@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, User, LogOut, LayoutDashboard } from 'lucide-react';
+import { ShoppingCart, User, LogOut, LayoutDashboard, ShoppingBag } from 'lucide-react';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
 import { useCart } from '../context/CartContext';
@@ -41,12 +41,15 @@ const Navbar = ({ user, isAdmin }) => {
 
           {user ? (
             <div className="flex-center" style={{ gap: '1rem' }}>
+              <Link to="/orders" className="btn btn-secondary" style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <ShoppingBag size={18} /> My Orders
+              </Link>
               {isAdmin && (
-                <Link to="/admin" className="btn btn-secondary" style={{ padding: '0.5rem 1rem' }}>
+                <Link to="/admin" className="btn btn-secondary" style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                   <LayoutDashboard size={18} /> Admin
                 </Link>
               )}
-              <button onClick={handleLogout} className="btn btn-primary" style={{ padding: '0.5rem 1rem' }}>
+              <button onClick={handleLogout} className="btn btn-primary" style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                 <LogOut size={18} /> Logout
               </button>
             </div>
