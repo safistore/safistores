@@ -12,6 +12,13 @@ const Checkout = () => {
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyUpi = () => {
+    navigator.clipboard.writeText('9345314960@axl');
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   if (cart.length === 0) {
     return (
@@ -55,7 +62,7 @@ const Checkout = () => {
       const orderId = docRef.id;
 
       // 3. Format message for WhatsApp redirect
-      const message = `Hello Safi Store, I have completed my payment.
+      const message = `Your order is placed. Please attach your screenshot.
 
 *Order ID:* ${orderId}
 *Customer Name:* ${name}
@@ -65,9 +72,7 @@ const Checkout = () => {
 *Order Details:*
 ${cart.map(item => `- ${item.name} x ${item.quantity} (₹${item.price * item.quantity})`).join('\n')}
 
-*Total Amount Paid:* ₹${cartTotal}
-
-Please find my payment screenshot attached.`;
+*Total Amount Paid:* ₹${cartTotal}`;
 
       const encodedMessage = encodeURIComponent(message);
       window.open(`https://wa.me/919345314960?text=${encodedMessage}`, '_blank');
@@ -143,7 +148,25 @@ Please find my payment screenshot attached.`;
             
             <div style={{ textAlign: 'center' }}>
               <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>UPI ID:</p>
-              <p style={{ fontSize: '1.25rem', fontWeight: '600', letterSpacing: '1px' }}>9345314960@axl</p>
+              <div className="flex-center" style={{ gap: '0.5rem', marginTop: '0.5rem' }}>
+                <p style={{ fontSize: '1.25rem', fontWeight: '600', letterSpacing: '1px', margin: 0 }}>9345314960@axl</p>
+                <button 
+                  type="button" 
+                  onClick={handleCopyUpi} 
+                  style={{ 
+                    padding: '0.35rem 0.75rem', 
+                    fontSize: '0.8rem', 
+                    backgroundColor: copied ? 'var(--success)' : 'var(--text-primary)', 
+                    color: 'var(--bg-primary)', 
+                    borderRadius: '9999px',
+                    fontWeight: '500',
+                    transition: 'all 0.2s ease',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {copied ? 'Copied!' : 'Copy'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
