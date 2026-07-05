@@ -48,7 +48,9 @@ const Checkout = () => {
           id: item.id,
           name: item.name,
           price: item.price,
-          quantity: item.quantity
+          quantity: item.quantity,
+          selectedSize: item.selectedSize || null,
+          selectedColor: item.selectedColor || null
         })),
         total: Number(cartTotal),
         status: 'Pending Payment Verification',
@@ -70,7 +72,13 @@ const Checkout = () => {
 *Shipping Address:* ${address}
 
 *Order Details:*
-${cart.map(item => `- ${item.name} x ${item.quantity} (₹${item.price * item.quantity})`).join('\n')}
+${cart.map(item => {
+  const variationText = [
+    item.selectedSize ? `Size: ${item.selectedSize}` : '',
+    item.selectedColor ? `Color: ${item.selectedColor}` : ''
+  ].filter(Boolean).join(', ');
+  return `- ${item.name} ${variationText ? `(${variationText}) ` : ''}x ${item.quantity} (₹${item.price * item.quantity})`;
+}).join('\n')}
 
 *Total Amount Paid:* ₹${cartTotal}`;
 
@@ -176,8 +184,17 @@ ${cart.map(item => `- ${item.name} x ${item.quantity} (₹${item.price * item.qu
         <div className="glass-card" style={{ marginBottom: '2rem' }}>
           <h3 style={{ marginBottom: '1.5rem', color: 'var(--accent-color)' }}>3. Order Summary</h3>
           {cart.map(item => (
-            <div key={item.id} className="flex-between" style={{ marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
-              <span>{item.name} x {item.quantity}</span>
+            <div key={item.cartItemId} className="flex-between" style={{ marginBottom: '0.75rem', alignItems: 'flex-start', color: 'var(--text-secondary)' }}>
+              <div>
+                <span style={{ fontWeight: '500', color: 'var(--text-primary)' }}>{item.name}</span>
+                <span style={{ fontSize: '0.85rem', display: 'block', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
+                  {item.selectedSize ? `Size: ${item.selectedSize}` : ''}
+                  {item.selectedSize && item.selectedColor ? ' | ' : ''}
+                  {item.selectedColor ? `Color: ${item.selectedColor}` : ''}
+                  {item.selectedSize || item.selectedColor ? ' | ' : ''}
+                  Qty: {item.quantity}
+                </span>
+              </div>
               <span>₹{item.price * item.quantity}</span>
             </div>
           ))}
