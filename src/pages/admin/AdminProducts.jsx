@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { collection, addDoc, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Edit } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const AdminProducts = () => {
@@ -16,6 +16,8 @@ const AdminProducts = () => {
   const [imageFiles, setImageFiles] = useState([]);
   const [sizesInput, setSizesInput] = useState('');
   const [colorsInput, setColorsInput] = useState('');
+  const [editingProductId, setEditingProductId] = useState(null);
+  const [existingImageUrls, setExistingImageUrls] = useState([]);
 
   useEffect(() => {
     fetchProducts();
@@ -65,6 +67,8 @@ const AdminProducts = () => {
         });
 
         imageUrls = await Promise.all(uploadPromises);
+      } else if (editingProductId) {
+        imageUrls = existingImageUrls;
       }
 
       // Parse sizes and colors
@@ -77,17 +81,24 @@ const AdminProducts = () => {
         .map(c => c.trim())
         .filter(c => c.length > 0);
 
-      // Add product to Firestore
-      await addDoc(collection(db, "products"), {
+      const productData = {
         name,
         price: Number(price),
         description,
         imageUrl: imageUrls[0] || '', // primary thumbnail for backwards compatibility
         imageUrls,
         sizes,
-        colors,
-        createdAt: new Date().toISOString()
-      });
+        colors
+      };
+
+      if (editingProductId) {
+        await updateDoc(doc(db, "products", editingProductId), productData);
+      } else {
+        await addDoc(collection(db, "products"), {
+          ...productData,
+          createdAt: new Date().toISOString()
+        });
+      }
 
       // Reset form
       setName('');
@@ -96,6 +107,8 @@ const AdminProducts = () => {
       setImageFiles([]);
       setSizesInput('');
       setColorsInput('');
+      setEditingProductId(null);
+      setExistingImageUrls([]);
       
       // Reset file input value
       const fileInput = document.querySelector('input[type="file"]');
@@ -104,11 +117,40 @@ const AdminProducts = () => {
       // Refresh list
       fetchProducts();
     } catch (error) {
-      console.error("Error adding product:", error);
-      alert("Error adding product: " + error.message);
+      console.error("Error saving product:", error);
+      alert("Error saving product: " + error.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEditClick = (product) => {
+    setEditingProductId(product.id);
+    setName(product.name);
+    setPrice(product.price);
+    setDescription(product.description || '');
+    setSizesInput(product.sizes ? product.sizes.join(', ') : '');
+    setColorsInput(product.colors ? product.colors.join(', ') : '');
+    setExistingImageUrls(product.imageUrls || (product.imageUrl ? [product.imageUrl] : []));
+    setImageFiles([]); // Clear any new selections
+    
+    const fileInput = document.querySelector('input[type="file"]');
+    if (fileInput) fileInput.value = '';
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingProductId(null);
+    setName('');
+    setPrice('');
+    setDescription('');
+    setSizesInput('');
+    setColorsInput('');
+    setImageFiles([]);
+    setExistingImageUrls([]);
+    const fileInput = document.querySelector('input[type="file"]');
+    if (fileInput) fileInput.value = '';
   };
 
   const handleDelete = async (id, imageUrl) => {
@@ -137,7 +179,7 @@ const AdminProducts = () => {
       <div className="grid-cols-3" style={{ alignItems: 'flex-start' }}>
         {/* Add Product Form */}
         <div className="glass-card" style={{ gridColumn: 'span 1' }}>
-          <h3 style={{ marginBottom: '1.5rem' }}>Add New Product</h3>
+          <h3 style={{ marginBottom: '1.5rem' }}>{editingProductId ? 'Edit Product' : 'Add New Product'}</h3>
           <form onSubmit={handleAddProduct}>
             <div className="form-group">
               <label className="form-label">Product Name</label>
@@ -189,8 +231,22 @@ const AdminProducts = () => {
                 onChange={e => setColorsInput(e.target.value)} 
               />
             </div>
+            {editingProductId && existingImageUrls.length > 0 && imageFiles.length === 0 && (
+              <div className="form-group">
+                <label className="form-label">Current Images</label>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  {existingImageUrls.map((url, idx) => (
+                    <div key={idx} style={{ width: '50px', height: '50px', borderRadius: '0.25rem', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+                      <img src={url} alt="existing preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="form-group">
-              <label className="form-label">Product Images (select one or more)</label>
+              <label className="form-label">
+                {editingProductId ? 'Replace Images (optional)' : 'Product Images (select one or more)'}
+              </label>
               <input 
                 type="file" 
                 accept="image/*"
@@ -209,8 +265,19 @@ const AdminProducts = () => {
               )}
             </div>
             <button type="submit" className="btn btn-accent" style={{ width: '100%' }} disabled={loading}>
-              {loading ? 'Adding & Uploading...' : 'Add Product'}
+              {loading ? 'Saving...' : (editingProductId ? 'Update Product' : 'Add Product')}
             </button>
+            {editingProductId && (
+              <button 
+                type="button" 
+                className="btn btn-secondary" 
+                style={{ width: '100%', marginTop: '0.5rem', cursor: 'pointer' }}
+                onClick={handleCancelEdit}
+                disabled={loading}
+              >
+                Cancel Edit
+              </button>
+            )}
           </form>
         </div>
 
@@ -233,9 +300,22 @@ const AdminProducts = () => {
                       <p style={{ color: 'var(--accent-color)', fontSize: '0.875rem' }}>₹{product.price}</p>
                     </div>
                   </div>
-                  <button onClick={() => handleDelete(product.id, product.imageUrl)} style={{ color: 'var(--danger)', padding: '0.5rem' }}>
-                    <Trash2 size={20} />
-                  </button>
+                  <div className="flex-center" style={{ gap: '0.5rem' }}>
+                    <button 
+                      onClick={() => handleEditClick(product)} 
+                      style={{ color: 'var(--text-secondary)', padding: '0.5rem', cursor: 'pointer' }}
+                      title="Edit Product"
+                    >
+                      <Edit size={20} />
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(product.id, product.imageUrl)} 
+                      style={{ color: 'var(--danger)', padding: '0.5rem', cursor: 'pointer' }}
+                      title="Delete Product"
+                    >
+                      <Trash2 size={20} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
