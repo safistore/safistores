@@ -23,11 +23,11 @@ const QuickViewModal = ({ product, isOpen, onClose }) => {
 
   const handleAddToCart = () => {
     if (product.sizes && product.sizes.length > 0 && !selectedSize) {
-      alert('Please select a size');
+      alert(`Please select a ${product.sizeLabel || 'size'}`);
       return;
     }
     if (product.colors && product.colors.length > 0 && !selectedColor) {
-      alert('Please select a color');
+      alert(`Please select a ${product.colorLabel || 'color'}`);
       return;
     }
     const cartProduct = {
@@ -166,7 +166,7 @@ const QuickViewModal = ({ product, isOpen, onClose }) => {
             {product.sizes && product.sizes.length > 0 && (
               <div style={{ marginBottom: '1.25rem' }}>
                 <span style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-                  Select Size
+                  Select {product.sizeLabel || 'Size'}
                 </span>
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                   {product.sizes.map((size) => (
@@ -202,7 +202,7 @@ const QuickViewModal = ({ product, isOpen, onClose }) => {
             {product.colors && product.colors.length > 0 && (
               <div style={{ marginBottom: '1.5rem' }}>
                 <span style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-                  Select Color
+                  Select {product.colorLabel || 'Color'}
                 </span>
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                   {product.colors.map((color) => (
