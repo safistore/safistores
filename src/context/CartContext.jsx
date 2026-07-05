@@ -14,26 +14,33 @@ export const CartProvider = ({ children }) => {
     localStorage.setItem('safiCart', JSON.stringify(cart));
   }, [cart]);
 
-  const addToCart = (product) => {
+  const addToCart = (product, selectedSize = null, selectedColor = null, quantityToAdd = 1) => {
+    const cartItemId = `${product.id}-${selectedSize || ''}-${selectedColor || ''}`;
     setCart((prev) => {
-      const existing = prev.find((item) => item.id === product.id);
+      const existing = prev.find((item) => item.cartItemId === cartItemId);
       if (existing) {
         return prev.map((item) =>
-          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+          item.cartItemId === cartItemId ? { ...item, quantity: item.quantity + quantityToAdd } : item
         );
       }
-      return [...prev, { ...product, quantity: 1 }];
+      return [...prev, { 
+        ...product, 
+        cartItemId, 
+        selectedSize, 
+        selectedColor, 
+        quantity: quantityToAdd 
+      }];
     });
   };
 
-  const removeFromCart = (id) => {
-    setCart((prev) => prev.filter((item) => item.id !== id));
+  const removeFromCart = (cartItemId) => {
+    setCart((prev) => prev.filter((item) => item.cartItemId !== cartItemId));
   };
 
-  const updateQuantity = (id, quantity) => {
+  const updateQuantity = (cartItemId, quantity) => {
     if (quantity < 1) return;
     setCart((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, quantity } : item))
+      prev.map((item) => (item.cartItemId === cartItemId ? { ...item, quantity } : item))
     );
   };
 
