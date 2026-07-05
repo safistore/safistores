@@ -32,8 +32,8 @@ const Cart = () => {
                   <h3 style={{ fontSize: '1.125rem', marginBottom: '0.25rem' }}>{item.name}</h3>
                   {(item.selectedSize || item.selectedColor) && (
                     <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-                      {item.selectedSize && <span>Size: <strong>{item.selectedSize}</strong></span>}
-                      {item.selectedColor && <span>Color: <strong>{item.selectedColor}</strong></span>}
+                      {item.selectedSize && <span>{item.sizeLabel || 'Size'}: <strong>{item.selectedSize}</strong></span>}
+                      {item.selectedColor && <span>{item.colorLabel || 'Color'}: <strong>{item.selectedColor}</strong></span>}
                     </div>
                   )}
                   <p style={{ fontWeight: '600', color: 'var(--accent-color)' }}>₹{item.price}</p>
