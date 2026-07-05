@@ -153,8 +153,8 @@ const Orders = () => {
                       </div>
                       {(item.selectedSize || item.selectedColor) && (
                         <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.8rem', color: 'var(--text-secondary)', marginLeft: '1rem', marginTop: '0.15rem' }}>
-                          {item.selectedSize && <span>Size: <strong>{item.selectedSize}</strong></span>}
-                          {item.selectedColor && <span>Color: <strong>{item.selectedColor}</strong></span>}
+                          {item.selectedSize && <span>{item.sizeLabel || 'Size'}: <strong>{item.selectedSize}</strong></span>}
+                          {item.selectedColor && <span>{item.colorLabel || 'Color'}: <strong>{item.selectedColor}</strong></span>}
                         </div>
                       )}
                     </div>
