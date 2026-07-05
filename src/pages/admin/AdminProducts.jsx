@@ -13,7 +13,9 @@ const AdminProducts = () => {
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [description, setDescription] = useState('');
-  const [imageFile, setImageFile] = useState(null);
+  const [imageFiles, setImageFiles] = useState([]);
+  const [sizesInput, setSizesInput] = useState('');
+  const [colorsInput, setColorsInput] = useState('');
 
   useEffect(() => {
     fetchProducts();
@@ -40,34 +42,50 @@ const AdminProducts = () => {
     setLoading(true);
 
     try {
-      let imageUrl = '';
+      let imageUrls = [];
 
-      if (imageFile) {
-        // Upload image to Cloudinary
-        const formData = new FormData();
-        formData.append('file', imageFile);
-        formData.append('upload_preset', 'safistore_preset');
+      if (imageFiles.length > 0) {
+        const uploadPromises = Array.from(imageFiles).map(async (file) => {
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('upload_preset', 'safistore_preset');
 
-        const response = await fetch('https://api.cloudinary.com/v1_1/dtqibelpn/image/upload', {
-          method: 'POST',
-          body: formData
+          const response = await fetch('https://api.cloudinary.com/v1_1/dtqibelpn/image/upload', {
+            method: 'POST',
+            body: formData
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error?.message || `Failed to upload image ${file.name}`);
+          }
+
+          const data = await response.json();
+          return data.secure_url;
         });
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error?.message || 'Failed to upload image to Cloudinary');
-        }
-
-        const data = await response.json();
-        imageUrl = data.secure_url;
+        imageUrls = await Promise.all(uploadPromises);
       }
+
+      // Parse sizes and colors
+      const sizes = sizesInput
+        .split(',')
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
+      const colors = colorsInput
+        .split(',')
+        .map(c => c.trim())
+        .filter(c => c.length > 0);
 
       // Add product to Firestore
       await addDoc(collection(db, "products"), {
         name,
         price: Number(price),
         description,
-        imageUrl,
+        imageUrl: imageUrls[0] || '', // primary thumbnail for backwards compatibility
+        imageUrls,
+        sizes,
+        colors,
         createdAt: new Date().toISOString()
       });
 
@@ -75,7 +93,9 @@ const AdminProducts = () => {
       setName('');
       setPrice('');
       setDescription('');
-      setImageFile(null);
+      setImageFiles([]);
+      setSizesInput('');
+      setColorsInput('');
       
       // Reset file input value
       const fileInput = document.querySelector('input[type="file"]');
@@ -150,16 +170,46 @@ const AdminProducts = () => {
               ></textarea>
             </div>
             <div className="form-group">
-              <label className="form-label">Product Image</label>
+              <label className="form-label">Sizes (comma-separated, e.g. S, M, L)</label>
+              <input 
+                type="text" 
+                className="form-input" 
+                placeholder="S, M, L, XL"
+                value={sizesInput} 
+                onChange={e => setSizesInput(e.target.value)} 
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Colors (comma-separated, e.g. Red, Blue)</label>
+              <input 
+                type="text" 
+                className="form-input" 
+                placeholder="Red, Blue, Black"
+                value={colorsInput} 
+                onChange={e => setColorsInput(e.target.value)} 
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Product Images (select one or more)</label>
               <input 
                 type="file" 
                 accept="image/*"
+                multiple
                 className="form-input" 
-                onChange={e => setImageFile(e.target.files[0])} 
+                onChange={e => setImageFiles(e.target.files)} 
               />
+              {imageFiles.length > 0 && (
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.75rem' }}>
+                  {Array.from(imageFiles).map((file, idx) => (
+                    <div key={idx} style={{ width: '50px', height: '50px', borderRadius: '0.25rem', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+                      <img src={URL.createObjectURL(file)} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <button type="submit" className="btn btn-accent" style={{ width: '100%' }} disabled={loading}>
-              {loading ? 'Adding...' : 'Add Product'}
+              {loading ? 'Adding & Uploading...' : 'Add Product'}
             </button>
           </form>
         </div>
