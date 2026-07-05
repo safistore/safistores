@@ -16,6 +16,8 @@ const AdminProducts = () => {
   const [imageFiles, setImageFiles] = useState([]);
   const [sizesInput, setSizesInput] = useState('');
   const [colorsInput, setColorsInput] = useState('');
+  const [sizeLabel, setSizeLabel] = useState('Size');
+  const [colorLabel, setColorLabel] = useState('Color');
   const [editingProductId, setEditingProductId] = useState(null);
   const [existingImageUrls, setExistingImageUrls] = useState([]);
 
@@ -88,7 +90,9 @@ const AdminProducts = () => {
         imageUrl: imageUrls[0] || '', // primary thumbnail for backwards compatibility
         imageUrls,
         sizes,
-        colors
+        colors,
+        sizeLabel,
+        colorLabel
       };
 
       if (editingProductId) {
@@ -107,6 +111,8 @@ const AdminProducts = () => {
       setImageFiles([]);
       setSizesInput('');
       setColorsInput('');
+      setSizeLabel('Size');
+      setColorLabel('Color');
       setEditingProductId(null);
       setExistingImageUrls([]);
       
@@ -131,6 +137,8 @@ const AdminProducts = () => {
     setDescription(product.description || '');
     setSizesInput(product.sizes ? product.sizes.join(', ') : '');
     setColorsInput(product.colors ? product.colors.join(', ') : '');
+    setSizeLabel(product.sizeLabel || 'Size');
+    setColorLabel(product.colorLabel || 'Color');
     setExistingImageUrls(product.imageUrls || (product.imageUrl ? [product.imageUrl] : []));
     setImageFiles([]); // Clear any new selections
     
@@ -147,6 +155,8 @@ const AdminProducts = () => {
     setDescription('');
     setSizesInput('');
     setColorsInput('');
+    setSizeLabel('Size');
+    setColorLabel('Color');
     setImageFiles([]);
     setExistingImageUrls([]);
     const fileInput = document.querySelector('input[type="file"]');
@@ -211,25 +221,50 @@ const AdminProducts = () => {
                 required 
               ></textarea>
             </div>
-            <div className="form-group">
-              <label className="form-label">Sizes (comma-separated, e.g. S, M, L)</label>
-              <input 
-                type="text" 
-                className="form-input" 
-                placeholder="S, M, L, XL"
-                value={sizesInput} 
-                onChange={e => setSizesInput(e.target.value)} 
-              />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '0.75rem', marginBottom: '1.5rem' }}>
+              <div>
+                <label className="form-label">Variation 1 Name</label>
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  value={sizeLabel} 
+                  onChange={e => setSizeLabel(e.target.value)} 
+                  required
+                />
+              </div>
+              <div>
+                <label className="form-label">Options (comma-separated)</label>
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  placeholder="e.g. S, M, L or 40mm, 44mm"
+                  value={sizesInput} 
+                  onChange={e => setSizesInput(e.target.value)} 
+                />
+              </div>
             </div>
-            <div className="form-group">
-              <label className="form-label">Colors (comma-separated, e.g. Red, Blue)</label>
-              <input 
-                type="text" 
-                className="form-input" 
-                placeholder="Red, Blue, Black"
-                value={colorsInput} 
-                onChange={e => setColorsInput(e.target.value)} 
-              />
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '0.75rem', marginBottom: '1.5rem' }}>
+              <div>
+                <label className="form-label">Variation 2 Name</label>
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  value={colorLabel} 
+                  onChange={e => setColorLabel(e.target.value)} 
+                  required
+                />
+              </div>
+              <div>
+                <label className="form-label">Options (comma-separated)</label>
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  placeholder="e.g. Red, Blue or Leather, Metal"
+                  value={colorsInput} 
+                  onChange={e => setColorsInput(e.target.value)} 
+                />
+              </div>
             </div>
             {editingProductId && existingImageUrls.length > 0 && imageFiles.length === 0 && (
               <div className="form-group">
