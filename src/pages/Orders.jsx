@@ -144,11 +144,19 @@ const Orders = () => {
               {/* Order Items */}
               <div style={{ marginBottom: '1.25rem' }}>
                 {order.items?.map((item, idx) => (
-                  <div key={idx} className="flex-between" style={{ padding: '0.5rem 0', color: 'var(--text-primary)', fontSize: '0.95rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>•</span>
-                      <span>{item.name}</span>
-                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>x{item.quantity}</span>
+                  <div key={idx} className="flex-between" style={{ padding: '0.5rem 0', alignItems: 'flex-start', color: 'var(--text-primary)', fontSize: '0.95rem' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>•</span>
+                        <span style={{ fontWeight: '500' }}>{item.name}</span>
+                        <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>x{item.quantity}</span>
+                      </div>
+                      {(item.selectedSize || item.selectedColor) && (
+                        <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.8rem', color: 'var(--text-secondary)', marginLeft: '1rem', marginTop: '0.15rem' }}>
+                          {item.selectedSize && <span>Size: <strong>{item.selectedSize}</strong></span>}
+                          {item.selectedColor && <span>Color: <strong>{item.selectedColor}</strong></span>}
+                        </div>
+                      )}
                     </div>
                     <span style={{ fontWeight: '500' }}>₹{(item.price * item.quantity).toLocaleString('en-IN')}</span>
                   </div>
