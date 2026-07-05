@@ -74,8 +74,8 @@ const Checkout = () => {
 *Order Details:*
 ${cart.map(item => {
   const variationText = [
-    item.selectedSize ? `Size: ${item.selectedSize}` : '',
-    item.selectedColor ? `Color: ${item.selectedColor}` : ''
+    item.selectedSize ? `${item.sizeLabel || 'Size'}: ${item.selectedSize}` : '',
+    item.selectedColor ? `${item.colorLabel || 'Color'}: ${item.selectedColor}` : ''
   ].filter(Boolean).join(', ');
   return `- ${item.name} ${variationText ? `(${variationText}) ` : ''}x ${item.quantity} (₹${item.price * item.quantity})`;
 }).join('\n')}
@@ -188,9 +188,9 @@ ${cart.map(item => {
               <div>
                 <span style={{ fontWeight: '500', color: 'var(--text-primary)' }}>{item.name}</span>
                 <span style={{ fontSize: '0.85rem', display: 'block', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
-                  {item.selectedSize ? `Size: ${item.selectedSize}` : ''}
+                  {item.selectedSize ? `${item.sizeLabel || 'Size'}: ${item.selectedSize}` : ''}
                   {item.selectedSize && item.selectedColor ? ' | ' : ''}
-                  {item.selectedColor ? `Color: ${item.selectedColor}` : ''}
+                  {item.selectedColor ? `${item.colorLabel || 'Color'}: ${item.selectedColor}` : ''}
                   {item.selectedSize || item.selectedColor ? ' | ' : ''}
                   Qty: {item.quantity}
                 </span>
