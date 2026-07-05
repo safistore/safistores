@@ -30,7 +30,11 @@ const QuickViewModal = ({ product, isOpen, onClose }) => {
       alert('Please select a color');
       return;
     }
-    addToCart(product, selectedSize, selectedColor, quantity);
+    const cartProduct = {
+      ...product,
+      imageUrl: selectedImage
+    };
+    addToCart(cartProduct, selectedSize, selectedColor, quantity);
     onClose();
   };
 
