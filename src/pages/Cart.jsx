@@ -23,25 +23,31 @@ const Cart = () => {
       <div className="grid-cols-3" style={{ alignItems: 'flex-start' }}>
         <div style={{ gridColumn: 'span 2' }}>
           {cart.map((item) => (
-            <div key={item.id} className="glass-card flex-between" style={{ marginBottom: '1rem', padding: '1.5rem' }}>
+            <div key={item.cartItemId} className="glass-card flex-between" style={{ marginBottom: '1rem', padding: '1.5rem' }}>
               <div className="flex-center" style={{ gap: '1.5rem' }}>
                 <div style={{ width: '80px', height: '80px', borderRadius: '0.5rem', overflow: 'hidden', background: 'var(--bg-secondary)' }}>
                   {item.imageUrl && <img src={item.imageUrl} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
                 </div>
                 <div>
-                  <h3 style={{ fontSize: '1.125rem', marginBottom: '0.5rem' }}>{item.name}</h3>
+                  <h3 style={{ fontSize: '1.125rem', marginBottom: '0.25rem' }}>{item.name}</h3>
+                  {(item.selectedSize || item.selectedColor) && (
+                    <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+                      {item.selectedSize && <span>Size: <strong>{item.selectedSize}</strong></span>}
+                      {item.selectedColor && <span>Color: <strong>{item.selectedColor}</strong></span>}
+                    </div>
+                  )}
                   <p style={{ fontWeight: '600', color: 'var(--accent-color)' }}>₹{item.price}</p>
                 </div>
               </div>
               
               <div className="flex-center" style={{ gap: '1rem' }}>
                 <div className="flex-center" style={{ border: '1px solid var(--border-color)', borderRadius: '0.5rem', padding: '0.25rem' }}>
-                  <button onClick={() => updateQuantity(item.id, item.quantity - 1)} style={{ padding: '0.25rem' }}><Minus size={16} /></button>
+                  <button onClick={() => updateQuantity(item.cartItemId, item.quantity - 1)} style={{ padding: '0.25rem', cursor: 'pointer' }}><Minus size={16} /></button>
                   <span style={{ padding: '0 1rem', fontWeight: '500' }}>{item.quantity}</span>
-                  <button onClick={() => updateQuantity(item.id, item.quantity + 1)} style={{ padding: '0.25rem' }}><Plus size={16} /></button>
+                  <button onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)} style={{ padding: '0.25rem', cursor: 'pointer' }}><Plus size={16} /></button>
                 </div>
                 
-                <button onClick={() => removeFromCart(item.id)} style={{ color: 'var(--danger)', padding: '0.5rem' }}>
+                <button onClick={() => removeFromCart(item.cartItemId)} style={{ color: 'var(--danger)', padding: '0.5rem', cursor: 'pointer' }}>
                   <Trash2 size={20} />
                 </button>
               </div>
