@@ -23,6 +23,7 @@ import ForgotPassword from './pages/ForgotPassword';
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminProducts from './pages/admin/AdminProducts';
+import SupplierPortal from './pages/admin/SupplierPortal';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -84,6 +85,10 @@ function App() {
             <Route 
               path="/admin/products" 
               element={isAdmin ? <AdminProducts /> : <Navigate to="/" />} 
+            />
+            <Route 
+              path="/admin/supplier" 
+              element={isAdmin ? <SupplierPortal /> : <Navigate to="/" />} 
             />
           </Routes>
         </main>
