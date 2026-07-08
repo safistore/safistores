@@ -144,21 +144,27 @@ const Orders = () => {
               {/* Order Items */}
               <div style={{ marginBottom: '1.25rem' }}>
                 {order.items?.map((item, idx) => (
-                  <div key={idx} className="flex-between" style={{ padding: '0.5rem 0', alignItems: 'flex-start', color: 'var(--text-primary)', fontSize: '0.95rem' }}>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>•</span>
-                        <span style={{ fontWeight: '500' }}>{item.name}</span>
-                        <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>x{item.quantity}</span>
-                      </div>
-                      {(item.selectedSize || item.selectedColor) && (
-                        <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.8rem', color: 'var(--text-secondary)', marginLeft: '1rem', marginTop: '0.15rem' }}>
-                          {item.selectedSize && <span>{item.sizeLabel || 'Size'}: <strong>{item.selectedSize}</strong></span>}
-                          {item.selectedColor && <span>{item.colorLabel || 'Color'}: <strong>{item.selectedColor}</strong></span>}
+                  <div key={idx} className="flex-between" style={{ padding: '0.75rem 0', borderBottom: '1px dotted var(--border-color)', alignItems: 'center', color: 'var(--text-primary)', fontSize: '0.95rem' }}>
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                      {item.imageUrl && (
+                        <div style={{ width: '45px', height: '45px', borderRadius: '0.25rem', overflow: 'hidden', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)' }}>
+                          <img src={item.imageUrl} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         </div>
                       )}
+                      <div>
+                        <div>
+                          <span style={{ fontWeight: '600' }}>{item.name}</span>
+                          <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginLeft: '0.5rem' }}>x{item.quantity}</span>
+                        </div>
+                        {(item.selectedSize || item.selectedColor) && (
+                          <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
+                            {item.selectedSize && <span>{item.sizeLabel || 'Size'}: <strong>{item.selectedSize}</strong></span>}
+                            {item.selectedColor && <span>{item.colorLabel || 'Color'}: <strong>{item.selectedColor}</strong></span>}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <span style={{ fontWeight: '500' }}>₹{(item.price * item.quantity).toLocaleString('en-IN')}</span>
+                    <span style={{ fontWeight: '600' }}>₹{(item.price * item.quantity).toLocaleString('en-IN')}</span>
                   </div>
                 ))}
               </div>
