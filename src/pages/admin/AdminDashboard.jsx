@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Package, Users, ShoppingBag, TrendingUp, Trash2 } from 'lucide-react';
-import { collection, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { db } from '../../firebase';
 
 const AdminDashboard = () => {
@@ -11,31 +11,28 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
-  const fetchDashboardData = async () => {
     setLoading(true);
-    
-    const getSortableDate = (val) => {
-      if (!val) return 0;
-      if (typeof val.toDate === 'function') return val.toDate().getTime();
-      return new Date(val).getTime();
-    };
+    fetchCounts();
 
-    // 1. Fetch Orders
-    try {
-      const ordersSnapshot = await getDocs(collection(db, "orders"));
-      const ordersList = ordersSnapshot.docs.map(doc => ({
+    // Set up real-time listener for orders
+    const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const ordersList = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
-      })).sort((a, b) => getSortableDate(b.createdAt) - getSortableDate(a.createdAt));
+      }));
       setOrders(ordersList);
-    } catch (error) {
-      console.error("Error fetching orders:", error);
-    }
+      setLoading(false);
+    }, (error) => {
+      console.error("Error listening to orders:", error);
+      setLoading(false);
+    });
 
-    // 2. Fetch Products Count
+    return () => unsubscribe();
+  }, []);
+
+  const fetchCounts = async () => {
+    // 1. Fetch Products Count
     try {
       const productsSnapshot = await getDocs(collection(db, "products"));
       setProductsCount(productsSnapshot.size);
@@ -43,7 +40,7 @@ const AdminDashboard = () => {
       console.error("Error fetching products count:", error);
     }
 
-    // 3. Fetch Users Count
+    // 2. Fetch Users Count
     try {
       const usersSnapshot = await getDocs(collection(db, "users"));
       setUsersCount(usersSnapshot.size);
@@ -56,8 +53,6 @@ const AdminDashboard = () => {
         setUsersCount('Error');
       }
     }
-
-    setLoading(false);
   };
 
   const formatOrderDate = (createdAt) => {
@@ -137,7 +132,10 @@ const AdminDashboard = () => {
     <div className="container animate-fade-in" style={{ padding: '2rem 1.5rem' }}>
       <div className="flex-between" style={{ marginBottom: '2rem' }}>
         <h2 className="heading-md">Admin Dashboard</h2>
-        <Link to="/admin/products" className="btn btn-accent">Manage Products</Link>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <Link to="/admin/supplier" className="btn btn-secondary">Supplier Portal</Link>
+          <Link to="/admin/products" className="btn btn-accent">Manage Products</Link>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -208,7 +206,14 @@ const AdminDashboard = () => {
               </thead>
               <tbody>
                 {orders.map(order => (
-                  <tr key={order.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                  <tr 
+                    key={order.id} 
+                    style={{ 
+                      borderBottom: '1px solid var(--border-color)',
+                      backgroundColor: order.status === 'Pending Payment Verification' ? 'rgba(241, 196, 15, 0.04)' : 'transparent',
+                      borderLeft: order.status === 'Pending Payment Verification' ? '4px solid #f1c40f' : 'none'
+                    }}
+                  >
                     <td style={{ padding: '1rem 0.5rem' }}>
                       <div style={{ fontWeight: '600', fontSize: '0.85rem' }}>{order.id}</div>
                       <div style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', marginTop: '0.25rem' }}>
@@ -236,25 +241,45 @@ const AdminDashboard = () => {
                       ₹{(order.total || 0).toLocaleString('en-IN')}
                     </td>
                     <td style={{ padding: '1rem 0.5rem' }}>
-                      <select 
-                        value={order.status} 
-                        onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                        style={{ 
-                          padding: '0.35rem 0.5rem', 
-                          borderRadius: '0.25rem', 
-                          border: '1px solid var(--border-color)', 
-                          backgroundColor: 'var(--bg-secondary)', 
-                          color: 'var(--text-primary)',
-                          fontSize: '0.85rem',
-                          fontWeight: '500',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        <option value="Pending Payment Verification">Pending Verification</option>
-                        <option value="Completed">Completed</option>
-                        <option value="Shipped">Shipped</option>
-                        <option value="Cancelled">Cancelled</option>
-                      </select>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <select 
+                          value={order.status} 
+                          onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                          style={{ 
+                            padding: '0.35rem 0.5rem', 
+                            borderRadius: '0.25rem', 
+                            border: '1px solid var(--border-color)', 
+                            backgroundColor: 'var(--bg-secondary)', 
+                            color: 'var(--text-primary)',
+                            fontSize: '0.85rem',
+                            fontWeight: '500',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <option value="Pending Payment Verification">Pending Verification</option>
+                          <option value="Completed">Completed</option>
+                          <option value="Shipped">Shipped</option>
+                          <option value="Cancelled">Cancelled</option>
+                        </select>
+                        {order.status === 'Pending Payment Verification' && (
+                          <button
+                            onClick={() => handleStatusChange(order.id, 'Completed')}
+                            style={{
+                              padding: '0.35rem 0.75rem',
+                              backgroundColor: 'var(--success)',
+                              color: 'white',
+                              borderRadius: '0.25rem',
+                              fontSize: '0.75rem',
+                              fontWeight: '600',
+                              cursor: 'pointer',
+                              animation: 'pulseApprove 1.5s infinite alternate'
+                            }}
+                            title="Quick Approve Payment"
+                          >
+                            Approve
+                          </button>
+                        )}
+                      </div>
                     </td>
                     <td style={{ padding: '1rem 0.5rem', textAlign: 'center' }}>
                       <button 
@@ -272,6 +297,12 @@ const AdminDashboard = () => {
           </div>
         )}
       </div>
+      <style>{`
+        @keyframes pulseApprove {
+          from { opacity: 0.85; transform: scale(0.97); }
+          to { opacity: 1; transform: scale(1.03); }
+        }
+      `}</style>
     </div>
   );
 };
