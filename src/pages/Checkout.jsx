@@ -391,7 +391,8 @@ ${cart.map(item => {
 
             {/* Items Table */}
             <div style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '1.5rem', marginBottom: '1.5rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr 1fr 1fr', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '600' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '60px 3fr 1fr 1fr 1fr', gap: '0.5rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '600' }}>
+                <span>Photo</span>
                 <span>Item Name</span>
                 <span style={{ textAlign: 'center' }}>Price</span>
                 <span style={{ textAlign: 'center' }}>Qty</span>
@@ -399,7 +400,14 @@ ${cart.map(item => {
               </div>
               
               {cart.map((item, idx) => (
-                <div key={idx} style={{ display: 'grid', gridTemplateColumns: '3fr 1fr 1fr 1fr', padding: '0.75rem 0', fontSize: '0.9rem', borderBottom: '1px dotted var(--border-color)', alignItems: 'center' }}>
+                <div key={idx} style={{ display: 'grid', gridTemplateColumns: '60px 3fr 1fr 1fr 1fr', gap: '0.5rem', padding: '0.75rem 0', fontSize: '0.9rem', borderBottom: '1px dotted var(--border-color)', alignItems: 'center' }}>
+                  <div style={{ width: '45px', height: '45px', borderRadius: '0.25rem', overflow: 'hidden', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)' }}>
+                    {item.imageUrl ? (
+                      <img src={item.imageUrl} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', textAlign: 'center', marginTop: '12px' }}>No Img</div>
+                    )}
+                  </div>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
                     <span style={{ fontWeight: '500' }}>{item.name}</span>
                     {(item.selectedSize || item.selectedColor) && (
