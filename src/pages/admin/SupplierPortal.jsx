@@ -266,7 +266,8 @@ const SupplierPortal = () => {
               </div>
 
               <div style={{ borderBottom: '2px solid #333', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr 1fr 1fr', paddingBottom: '0.5rem', borderBottom: '1px solid #333', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '60px 3fr 1fr 1fr 1fr', gap: '0.5rem', paddingBottom: '0.5rem', borderBottom: '1px solid #333', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase' }}>
+                  <span>Photo</span>
                   <span>Item Description</span>
                   <span style={{ textAlign: 'center' }}>Unit Price</span>
                   <span style={{ textAlign: 'center' }}>Qty</span>
@@ -274,7 +275,14 @@ const SupplierPortal = () => {
                 </div>
                 
                 {printOrder.items?.map((item, idx) => (
-                  <div key={idx} style={{ display: 'grid', gridTemplateColumns: '3fr 1fr 1fr 1fr', padding: '0.75rem 0', fontSize: '0.9rem', borderBottom: '1px dashed #ccc', alignItems: 'center' }}>
+                  <div key={idx} style={{ display: 'grid', gridTemplateColumns: '60px 3fr 1fr 1fr 1fr', gap: '0.5rem', padding: '0.75rem 0', fontSize: '0.9rem', borderBottom: '1px dashed #ccc', alignItems: 'center' }}>
+                    <div style={{ width: '45px', height: '45px', borderRadius: '0.25rem', overflow: 'hidden', border: '1px solid #ccc', backgroundColor: '#f5f5f5' }}>
+                      {item.imageUrl ? (
+                        <img src={item.imageUrl} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <div style={{ fontSize: '0.6rem', color: '#666', textAlign: 'center', marginTop: '12px' }}>No Img</div>
+                      )}
+                    </div>
                     <div>
                       <span style={{ fontWeight: '700' }}>{item.name}</span>
                       {(item.selectedSize || item.selectedColor) && (
@@ -334,14 +342,22 @@ const SupplierPortal = () => {
               </div>
 
               <div style={{ borderBottom: '2px solid #333', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '4fr 1fr 1fr', paddingBottom: '0.5rem', borderBottom: '1px solid #333', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '70px 4fr 1.5fr 1fr', gap: '0.5rem', paddingBottom: '0.5rem', borderBottom: '1px solid #333', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase' }}>
+                  <span>Photo</span>
                   <span>Product Specifications</span>
                   <span style={{ textAlign: 'center' }}>Unit Price</span>
                   <span style={{ textAlign: 'center' }}>Quantity</span>
                 </div>
                 
                 {printOrder.items?.map((item, idx) => (
-                  <div key={idx} style={{ display: 'grid', gridTemplateColumns: '4fr 1fr 1fr', padding: '0.75rem 0', fontSize: '0.95rem', borderBottom: '1px dashed #ccc', alignItems: 'center' }}>
+                  <div key={idx} style={{ display: 'grid', gridTemplateColumns: '70px 4fr 1.5fr 1fr', gap: '0.5rem', padding: '0.75rem 0', fontSize: '0.95rem', borderBottom: '1px dashed #ccc', alignItems: 'center' }}>
+                    <div style={{ width: '55px', height: '55px', borderRadius: '0.25rem', overflow: 'hidden', border: '1px solid #ccc', backgroundColor: '#f9f9f9' }}>
+                      {item.imageUrl ? (
+                        <img src={item.imageUrl} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <div style={{ fontSize: '0.7rem', color: '#666', textAlign: 'center', marginTop: '15px' }}>No Img</div>
+                      )}
+                    </div>
                     <div>
                       <span style={{ fontWeight: '800', fontSize: '1.05rem' }}>{item.name}</span>
                       {(item.selectedSize || item.selectedColor) && (
