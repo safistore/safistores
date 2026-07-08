@@ -23,8 +23,18 @@ const Navbar = ({ user, isAdmin }) => {
   return (
     <nav className="navbar">
       <div className="container flex-between">
-        <Link to="/" className="logo flex-center" style={{ gap: '10px' }}>
+        <Link to="/" className="logo flex-center" style={{ gap: '12px', textDecoration: 'none' }}>
           <img src={safiLogo} alt="Safi Store Logo" style={{ height: '45px', objectFit: 'contain' }} />
+          <span style={{ 
+            fontFamily: "'Reem Kufi', sans-serif", 
+            fontSize: '1.5rem', 
+            fontWeight: '700', 
+            color: 'var(--text-primary)', 
+            letterSpacing: '1px',
+            textTransform: 'uppercase'
+          }}>
+            Safi Stores
+          </span>
         </Link>
         
         <div className="nav-links flex-center" style={{ gap: '1.5rem' }}>
