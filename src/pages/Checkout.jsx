@@ -143,6 +143,19 @@ ${cart.map(item => {
     window.location.href = `https://wa.me/919345314960?text=${encodedMessage}`;
   };
 
+  const handleNotifyAdmin = () => {
+    const message = `Hello Safi Stores, I have sent a UPI payment of ₹${cartTotal} for my order.
+
+Order ID: ${orderId}
+Customer Name: ${name}
+Phone: ${phone}
+
+Please approve my order here: https://safistores.vercel.app/admin`;
+
+    const encodedMessage = encodeURIComponent(message);
+    window.open(`https://wa.me/919345314960?text=${encodedMessage}`, '_blank');
+  };
+
   const formatTimer = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -315,7 +328,34 @@ ${cart.map(item => {
             <div className="flex-center" style={{ flexDirection: 'column', gap: '0.75rem' }}>
               <RefreshCw size={24} style={{ color: 'var(--accent-color)', animation: 'spin 2s linear infinite' }} />
               <p style={{ fontSize: '0.95rem', fontWeight: '500' }}>Waiting for admin payment approval...</p>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Keep this page open. We will redirect you once verified.</p>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Keep this page open. We will redirect you once verified.</p>
+              
+              <button 
+                onClick={handleNotifyAdmin}
+                className="btn"
+                style={{ 
+                  backgroundColor: '#25D366', 
+                  color: 'white', 
+                  border: 'none', 
+                  padding: '0.75rem 1.5rem', 
+                  fontWeight: '600', 
+                  borderRadius: '0.5rem',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(37, 211, 102, 0.25)',
+                  transition: 'transform 0.2s',
+                  marginTop: '0.5rem'
+                }}
+                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.03)'}
+                onMouseLeave={e => e.currentTarget.style.transform = 'none'}
+              >
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.513 2.262 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.504-5.714-1.464L0 24zm6.09-3.921c1.642.975 3.518 1.489 5.86 1.49 5.541.002 10.051-4.505 10.054-10.045.002-2.684-1.038-5.207-2.93-7.104C17.275 2.52 14.76 1.48 12.007 1.48c-5.542 0-10.053 4.507-10.056 10.05-.001 2.038.529 4.032 1.535 5.793L2.43 21.603l4.316-1.124zM16.82 14.2c-.263-.13-.1.354-.755-.386-.184-.202-.38-.401-.582-.596-.328-.316-.322-.321-.11-.57.172-.204.38-.45.547-.648.163-.194.22-.317.11-.537-.11-.22-.495-1.196-.68-1.636-.18-.432-.36-.374-.495-.381-.13-.007-.278-.008-.427-.008-.15 0-.395.056-.602.28-.206.225-.788.77-.788 1.879s.804 2.181.917 2.336c.113.155 1.583 2.418 3.834 3.39.536.23 1.037.4 1.393.514.54.17 1.03.147 1.417.09.43-.064 1.325-.542 1.512-1.04.188-.497.188-.924.13-1.04-.056-.115-.206-.18-.469-.31z"/>
+                </svg>
+                Notify Admin on WhatsApp
+              </button>
             </div>
           ) : (
             <div style={{ animation: 'fadeIn 0.5s ease' }}>
