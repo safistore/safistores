@@ -34,6 +34,8 @@ const Login = ({ user }) => {
           role: loggedUser.email.toLowerCase() === 'safeekestore@gmail.com' ? 'admin' : 'user',
           createdAt: new Date().toISOString()
         });
+      } else if (loggedUser.email.toLowerCase() === 'safeekestore@gmail.com') {
+        await updateDoc(userDocRef, { role: 'admin' });
       }
       navigate('/');
     } catch (err) {
