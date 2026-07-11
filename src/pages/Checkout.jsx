@@ -16,10 +16,10 @@ const Checkout = () => {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // Checkout Wizard Step state: 'shipping', 'payment', 'success'
+  // Checkout Wizard Step state: 'shipping', 'payment', 'success', 'failed'
   const [checkoutStep, setCheckoutStep] = useState('shipping');
   const [orderId, setOrderId] = useState('');
-  const [timeLeft, setTimeLeft] = useState(60);
+  const [timeLeft, setTimeLeft] = useState(300);
   const [timerExpired, setTimerExpired] = useState(false);
   const timerRef = useRef(null);
 
@@ -29,21 +29,27 @@ const Checkout = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // 60-Second Real-Time Verification Handler
+  // 5-Minute Real-Time Verification Handler
   useEffect(() => {
     if (checkoutStep === 'payment' && orderId) {
       // 1. Establish Firestore real-time listener
       const unsubscribe = onSnapshot(doc(db, "orders", orderId), (snapshot) => {
         const data = snapshot.data();
-        if (data && (data.status === 'Completed' || data.status === 'Paid' || data.status === 'Shipped')) {
-          clearInterval(timerRef.current);
-          setCheckoutStep('success');
-          clearCart();
+        if (data) {
+          if (data.status === 'Completed' || data.status === 'Paid' || data.status === 'Shipped') {
+            clearInterval(timerRef.current);
+            setCheckoutStep('success');
+            clearCart();
+          } else if (data.status === 'Cancelled' || data.status === 'Rejected') {
+            clearInterval(timerRef.current);
+            setCheckoutStep('failed');
+            clearCart();
+          }
         }
       });
 
       // 2. Start Countdown
-      setTimeLeft(60);
+      setTimeLeft(300);
       setTimerExpired(false);
       
       timerRef.current = setInterval(() => {
@@ -482,6 +488,34 @@ Please approve my order here: https://safistores.vercel.app/admin`;
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* STEP 4: Payment Rejected/Failed Screen */}
+      {checkoutStep === 'failed' && (
+        <div className="glass-card animate-fade-in" style={{ textAlign: 'center', padding: '3rem 2rem' }}>
+          <div className="flex-center" style={{ color: 'var(--danger)', marginBottom: '1.5rem', justifyContent: 'center' }}>
+            <ShieldAlert size={60} style={{ strokeWidth: '1.5px' }} />
+          </div>
+          <h2 className="heading-md" style={{ fontSize: '1.75rem', marginBottom: '0.75rem', fontWeight: '700' }}>Payment Rejected</h2>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', fontSize: '0.95rem', lineHeight: '1.6' }}>
+            We could not verify your payment. The administrator has cancelled this transaction. If you believe this is a mistake, please contact our support team.
+          </p>
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+            <button 
+              onClick={() => {
+                const message = `Hello Safi Stores, my payment for Order ID: ${orderId} was marked as rejected. Please check again.`;
+                window.open(`https://wa.me/919345314960?text=${encodeURIComponent(message)}`, '_blank');
+              }} 
+              className="btn btn-primary"
+              style={{ backgroundColor: '#25D366', color: 'white', border: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}
+            >
+              Contact support on WhatsApp
+            </button>
+            <Link to="/" className="btn btn-secondary" style={{ textDecoration: 'none' }}>
+              Back to Home
+            </Link>
           </div>
         </div>
       )}
