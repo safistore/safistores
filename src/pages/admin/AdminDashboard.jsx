@@ -105,6 +105,22 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleNotifyCustomer = (order, type) => {
+    let cleanPhone = order.customerPhone.replace(/\D/g, '');
+    if (cleanPhone.length === 10) {
+      cleanPhone = '91' + cleanPhone;
+    }
+    
+    let message = '';
+    if (type === 'approve') {
+      message = `Hello ${order.customerName}, your payment of ₹${order.total} for Order ID: ${order.id} has been verified and processed successfully! Thank you for shopping with Safi Stores.`;
+    } else {
+      message = `Hello ${order.customerName}, we could not verify your payment for Order ID: ${order.id}. This order has not been processed. Please verify your receipt and try again, or contact our support team.`;
+    }
+    
+    window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank');
+  };
+
   const handleDeleteOrder = async (orderId) => {
     if (window.confirm("Are you sure you want to delete this order?")) {
       try {
@@ -223,6 +239,28 @@ const AdminDashboard = () => {
                     <td style={{ padding: '1rem 0.5rem' }}>
                       <div style={{ fontWeight: '500' }}>{order.customerName}</div>
                       <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{order.customerPhone}</div>
+                      <button
+                        onClick={() => handleNotifyCustomer(order, order.status === 'Completed' || order.status === 'Shipped' ? 'approve' : 'reject')}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: '#25D366',
+                          fontSize: '0.7rem',
+                          fontWeight: '600',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.25rem',
+                          marginTop: '0.15rem',
+                          padding: 0
+                        }}
+                        title="Send WhatsApp status update"
+                      >
+                        <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
+                          <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.513 2.262 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.504-5.714-1.464L0 24zm6.09-3.921c1.642.975 3.518 1.489 5.86 1.49 5.541.002 10.051-4.505 10.054-10.045.002-2.684-1.038-5.207-2.93-7.104C17.275 2.52 14.76 1.48 12.007 1.48c-5.542 0-10.053 4.507-10.056 10.05-.001 2.038.529 4.032 1.535 5.793L2.43 21.603l4.316-1.124zM16.82 14.2c-.263-.13-.1.354-.755-.386-.184-.202-.38-.401-.582-.596-.328-.316-.322-.321-.11-.57.172-.204.38-.45.547-.648.163-.194.22-.317.11-.537-.11-.22-.495-1.196-.68-1.636-.18-.432-.36-.374-.495-.381-.13-.007-.278-.008-.427-.008-.15 0-.395.056-.602.28-.206.225-.788.77-.788 1.879s.804 2.181.917 2.336c.113.155 1.583 2.418 3.834 3.39.536.23 1.037.4 1.393.514.54.17 1.03.147 1.417.09.43-.064 1.325-.542 1.512-1.04.188-.497.188-.924.13-1.04-.056-.115-.206-.18-.469-.31z"/>
+                        </svg>
+                        Ping WhatsApp
+                      </button>
                       <div 
                         style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} 
                         title={formatShippingAddress(order.shippingAddress)}
@@ -262,22 +300,47 @@ const AdminDashboard = () => {
                           <option value="Cancelled">Cancelled</option>
                         </select>
                         {order.status === 'Pending Payment Verification' && (
-                          <button
-                            onClick={() => handleStatusChange(order.id, 'Completed')}
-                            style={{
-                              padding: '0.35rem 0.75rem',
-                              backgroundColor: 'var(--success)',
-                              color: 'white',
-                              borderRadius: '0.25rem',
-                              fontSize: '0.75rem',
-                              fontWeight: '600',
-                              cursor: 'pointer',
-                              animation: 'pulseApprove 1.5s infinite alternate'
-                            }}
-                            title="Quick Approve Payment"
-                          >
-                            Approve
-                          </button>
+                          <div style={{ display: 'flex', gap: '0.25rem' }}>
+                            <button
+                              onClick={() => {
+                                handleStatusChange(order.id, 'Completed');
+                                handleNotifyCustomer(order, 'approve');
+                              }}
+                              style={{
+                                padding: '0.35rem 0.6rem',
+                                backgroundColor: 'var(--success)',
+                                color: 'white',
+                                borderRadius: '0.25rem',
+                                fontSize: '0.7rem',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                border: 'none',
+                                animation: 'pulseApprove 1.5s infinite alternate'
+                              }}
+                              title="Approve & Send WhatsApp Alert"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => {
+                                handleStatusChange(order.id, 'Cancelled');
+                                handleNotifyCustomer(order, 'reject');
+                              }}
+                              style={{
+                                padding: '0.35rem 0.6rem',
+                                backgroundColor: 'var(--danger)',
+                                color: 'white',
+                                borderRadius: '0.25rem',
+                                fontSize: '0.7rem',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                border: 'none'
+                              }}
+                              title="Reject & Send WhatsApp Alert"
+                            >
+                              Reject
+                            </button>
+                          </div>
                         )}
                       </div>
                     </td>
