@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { collection, onSnapshot, query, orderBy, doc, updateDoc } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { Printer, Search, ArrowLeft, Calendar, FileText, CheckCircle2, ShieldAlert, Download } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Search, ArrowLeft, Calendar, FileText, CheckCircle2, ShieldAlert, Download, Printer, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const SupplierPortal = () => {
   const [orders, setOrders] = useState([]);
@@ -10,9 +10,9 @@ const SupplierPortal = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   
-  // State for printing
-  const [printOrder, setPrintOrder] = useState(null);
-  const [printType, setPrintType] = useState(''); // 'customer' or 'supplier'
+  // State for Invoice Preview Modal
+  const [previewOrder, setPreviewOrder] = useState(null);
+  const [previewType, setPreviewType] = useState(''); // 'customer' or 'supplier'
   const [downloading, setDownloading] = useState(false);
 
   const navigate = useNavigate();
@@ -52,95 +52,46 @@ const SupplierPortal = () => {
     });
   };
 
-  const handlePrint = (order, type) => {
-    setPrintOrder(order);
-    setPrintType(type);
-    // Give state a moment to render the print container before calling print dialog
-    setTimeout(() => {
-      window.print();
-    }, 150);
-  };
-
-  const handleDownloadPDF = (order, type) => {
-    setPrintOrder(order);
-    setPrintType(type);
+  const downloadPDFFromPreview = () => {
+    const element = document.getElementById('preview-sheet-to-pdf');
+    if (!element) return;
+    
     setDownloading(true);
     
-    setTimeout(() => {
-      // Find the print overlay container
-      const element = document.querySelector('.print-overlay');
-      if (!element) {
-        setDownloading(false);
-        return;
-      }
-      
-      // Temporarily make it visible to the layout engine, but pushed off-screen behind the UI
-      const originalStyle = element.getAttribute('style') || '';
-      element.style.display = 'block';
-      element.style.position = 'fixed';
-      element.style.top = '0';
-      element.style.left = '0';
-      element.style.width = '800px';
-      element.style.zIndex = '-9999';
-      element.style.opacity = '1';
-      element.style.backgroundColor = '#ffffff';
-      element.style.color = '#000000';
-      element.style.visibility = 'visible';
-      
-      // Force all children inside element to be visible too (to override print styles)
-      const allChildren = element.querySelectorAll('*');
-      allChildren.forEach(child => {
-        child.style.visibility = 'visible';
-      });
-      
-      const opt = {
-        margin:       12,
-        filename:     `${type === 'customer' ? 'Customer' : 'Supplier'}_Bill_${order.id}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, logging: false },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
-      
-      const triggerDownload = () => {
-        window.html2pdf()
-          .from(element)
-          .set(opt)
-          .save()
-          .then(() => {
-            // Restore original style
-            element.setAttribute('style', originalStyle);
-            allChildren.forEach(child => {
-              child.style.visibility = '';
-            });
-            setDownloading(false);
-          })
-          .catch((err) => {
-            console.error("PDF generation error:", err);
-            element.setAttribute('style', originalStyle);
-            allChildren.forEach(child => {
-              child.style.visibility = '';
-            });
-            setDownloading(false);
-          });
-      };
-
-      if (window.html2pdf) {
-        triggerDownload();
-      } else {
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-        script.onload = triggerDownload;
-        script.onerror = () => {
-          alert("Failed to load PDF library. Please check your internet connection.");
-          element.setAttribute('style', originalStyle);
-          allChildren.forEach(child => {
-            child.style.visibility = '';
-          });
+    const opt = {
+      margin:       12,
+      filename:     `${previewType === 'customer' ? 'Customer' : 'Supplier'}_Bill_${previewOrder.id}.pdf`,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true, logging: false },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    
+    const triggerDownload = () => {
+      window.html2pdf()
+        .from(element)
+        .set(opt)
+        .save()
+        .then(() => {
           setDownloading(false);
-        };
-        document.body.appendChild(script);
-      }
-    }, 350);
+        })
+        .catch((err) => {
+          console.error("PDF generation error:", err);
+          setDownloading(false);
+        });
+    };
+
+    if (window.html2pdf) {
+      triggerDownload();
+    } else {
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+      script.onload = triggerDownload;
+      script.onerror = () => {
+        alert("Failed to load PDF library. Please check your internet connection.");
+        setDownloading(false);
+      };
+      document.body.appendChild(script);
+    }
   };
 
   // Filter orders based on query and status filter
@@ -247,29 +198,27 @@ const SupplierPortal = () => {
                     </span>
                   )}
 
-                  {/* Print / Download Buttons */}
+                  {/* Preview / Print Options */}
                   <button 
-                    onClick={() => handleDownloadPDF(order, 'customer')} 
+                    onClick={() => { setPreviewOrder(order); setPreviewType('customer'); }} 
                     className="btn btn-primary" 
-                    style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', gap: '0.35rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}
-                    disabled={downloading}
+                    style={{ padding: '0.5rem 1.25rem', fontSize: '0.85rem', gap: '0.35rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', fontWeight: '600' }}
                   >
-                    <Download size={16} />
-                    Customer Bill (PDF)
+                    <FileText size={16} />
+                    Customer Bill
                   </button>
                   <button 
-                    onClick={() => handleDownloadPDF(order, 'supplier')} 
+                    onClick={() => { setPreviewOrder(order); setPreviewType('supplier'); }} 
                     className="btn btn-accent" 
-                    style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', gap: '0.35rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}
-                    disabled={downloading}
+                    style={{ padding: '0.5rem 1.25rem', fontSize: '0.85rem', gap: '0.35rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', fontWeight: '600' }}
                   >
-                    <Download size={16} />
-                    Supplier Slip (PDF)
+                    <FileText size={16} />
+                    Supplier Slip
                   </button>
                 </div>
               </div>
 
-              {/* Order Content */}
+              {/* Order Content Preview on Dashboard */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', flexWrap: 'wrap' }}>
                 {/* Shipping Details */}
                 <div>
@@ -281,27 +230,18 @@ const SupplierPortal = () => {
                   </p>
                 </div>
 
-                {/* Items details */}
-                <div>
-                  <h5 style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.75rem' }}>Ordered Items:</h5>
+                {/* Items summary details */}
+                <div style={{ borderLeft: '1px solid var(--border-color)', paddingLeft: '2rem' }}>
+                  <h5 style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.75rem' }}>Items Purchased:</h5>
                   {order.items?.map((item, idx) => (
-                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px dotted var(--border-color)', fontSize: '0.95rem' }}>
-                      <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                        {item.imageUrl && (
-                          <div style={{ width: '40px', height: '40px', borderRadius: '0.25rem', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
-                            <img src={item.imageUrl} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          </div>
-                        )}
+                    <div key={idx} className="flex-between" style={{ padding: '0.4rem 0', borderBottom: '1px dashed var(--border-color)', fontSize: '0.9rem' }}>
+                      <div className="flex-center" style={{ gap: '0.5rem' }}>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
+                          {item.imageUrl && <img src={item.imageUrl} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                        </div>
                         <div>
-                          <span style={{ fontWeight: '500' }}>{item.name}</span>
-                          <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}> x {item.quantity}</span>
-                          {(item.selectedSize || item.selectedColor) && (
-                            <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
-                              {item.selectedSize ? `${item.sizeLabel || 'Size'}: ${item.selectedSize}` : ''}
-                              {item.selectedSize && item.selectedColor ? ' | ' : ''}
-                              {item.selectedColor ? `${item.colorLabel || 'Color'}: ${item.selectedColor}` : ''}
-                            </span>
-                          )}
+                          <span>{item.name}</span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginLeft: '0.5rem' }}>x{item.quantity}</span>
                         </div>
                       </div>
                       <span style={{ fontWeight: '600' }}>₹{item.price * item.quantity}</span>
@@ -318,202 +258,242 @@ const SupplierPortal = () => {
         </div>
       )}
 
-      {/* HIDDEN PRINTABLE CONTAINERS */}
-      {printOrder && (
-        <div className="print-overlay">
-          {/* CUSTOMER RECEIPT INVOICE */}
-          {printType === 'customer' && (
-            <div className="print-receipt-sheet customer-sheet">
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #333', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
-                <div>
-                  <h1 style={{ fontSize: '1.75rem', fontWeight: '700', margin: 0 }}>Nish Fashion</h1>
-                  <p style={{ fontSize: '0.85rem', color: '#555', margin: '0.25rem 0 0 0' }}>Safi Store Receipt</p>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: '700', margin: 0 }}>CUSTOMER RECEIPT</h3>
-                  <p style={{ fontSize: '0.85rem', color: '#555', margin: '0.25rem 0 0 0' }}>Invoice ID: {printOrder.id}</p>
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
-                <div>
-                  <h5 style={{ fontSize: '0.85rem', color: '#666', textTransform: 'uppercase', marginBottom: '0.5rem', fontWeight: '700' }}>Billed To:</h5>
-                  <p style={{ fontWeight: '700', fontSize: '1rem', margin: 0 }}>{printOrder.customerName}</p>
-                  <p style={{ fontSize: '0.9rem', margin: '0.25rem 0' }}>Phone: {printOrder.customerPhone}</p>
-                  <p style={{ fontSize: '0.9rem', color: '#333', margin: 0, lineHeight: '1.4' }}>{printOrder.shippingAddress}</p>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <h5 style={{ fontSize: '0.85rem', color: '#666', textTransform: 'uppercase', marginBottom: '0.5rem', fontWeight: '700' }}>Invoice Details:</h5>
-                  <p style={{ fontSize: '0.9rem', margin: 0 }}>Date: {formatOrderDate(printOrder.createdAt)}</p>
-                  <p style={{ fontSize: '0.9rem', margin: '0.25rem 0' }}>Payment: Verified UPI</p>
-                  <p style={{ fontSize: '0.9rem', margin: 0 }}>Status: <strong style={{ color: '#2ecc71' }}>PAID</strong></p>
-                </div>
-              </div>
-
-              <div style={{ borderBottom: '2px solid #333', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '60px 3fr 1fr 1fr 1fr', gap: '0.5rem', paddingBottom: '0.5rem', borderBottom: '1px solid #333', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase' }}>
-                  <span>Photo</span>
-                  <span>Item Description</span>
-                  <span style={{ textAlign: 'center' }}>Unit Price</span>
-                  <span style={{ textAlign: 'center' }}>Qty</span>
-                  <span style={{ textAlign: 'right' }}>Total Price</span>
-                </div>
-                
-                {printOrder.items?.map((item, idx) => (
-                  <div key={idx} style={{ display: 'grid', gridTemplateColumns: '60px 3fr 1fr 1fr 1fr', gap: '0.5rem', padding: '0.75rem 0', fontSize: '0.9rem', borderBottom: '1px dashed #ccc', alignItems: 'center' }}>
-                    <div style={{ width: '45px', height: '45px', borderRadius: '0.25rem', overflow: 'hidden', border: '1px solid #ccc', backgroundColor: '#f5f5f5' }}>
-                      {item.imageUrl ? (
-                        <img src={item.imageUrl} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      ) : (
-                        <div style={{ fontSize: '0.6rem', color: '#666', textAlign: 'center', marginTop: '12px' }}>No Img</div>
-                      )}
-                    </div>
-                    <div>
-                      <span style={{ fontWeight: '700' }}>{item.name}</span>
-                      {(item.selectedSize || item.selectedColor) && (
-                        <span style={{ display: 'block', fontSize: '0.75rem', color: '#555', marginTop: '0.15rem' }}>
-                          {item.selectedSize ? `${item.sizeLabel || 'Size'}: ${item.selectedSize}` : ''}
-                          {item.selectedSize && item.selectedColor ? ' | ' : ''}
-                          {item.selectedColor ? `${item.colorLabel || 'Color'}: ${item.selectedColor}` : ''}
-                        </span>
-                      )}
-                    </div>
-                    <span style={{ textAlign: 'center' }}>₹{item.price}</span>
-                    <span style={{ textAlign: 'center' }}>{item.quantity}</span>
-                    <span style={{ textAlign: 'right', fontWeight: '700' }}>₹{item.price * item.quantity}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <div style={{ width: '250px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', margin: '0.35rem 0' }}>
-                    <span>Subtotal:</span>
-                    <span>₹{printOrder.total}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', margin: '0.35rem 0' }}>
-                    <span>Shipping:</span>
-                    <span>Free</span>
-                  </div>
-                  <div style={{ height: '1px', background: '#333', margin: '0.5rem 0' }}></div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.2rem', fontWeight: '800' }}>
-                    <span>Grand Total:</span>
-                    <span>₹{printOrder.total}</span>
-                  </div>
-                </div>
-              </div>
+      {/* BILL PREVIEW AND PDF DOWNLOADER MODAL */}
+      {previewOrder && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.85)',
+          zIndex: 2000,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          padding: '2rem 1rem',
+          overflowY: 'auto'
+        }}>
+          {/* Toolbar */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            width: '100%',
+            maxWidth: '800px',
+            backgroundColor: 'var(--card-bg)',
+            border: '1px solid var(--border-color)',
+            padding: '1rem 1.5rem',
+            borderRadius: '0.5rem',
+            marginBottom: '1.5rem',
+            boxShadow: 'var(--shadow-lg)'
+          }}>
+            <span style={{ fontWeight: '700', fontSize: '1rem', color: 'var(--text-primary)' }}>
+              {previewType === 'customer' ? 'Customer Invoice Preview' : 'Supplier Slip Preview'}
+            </span>
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+              <button 
+                onClick={downloadPDFFromPreview}
+                className="btn btn-accent"
+                style={{ padding: '0.55rem 1.25rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer', fontWeight: '600' }}
+                disabled={downloading}
+              >
+                <Download size={16} />
+                {downloading ? 'Downloading...' : 'Download PDF'}
+              </button>
+              <button 
+                onClick={() => {
+                  const printContent = document.getElementById('preview-sheet-to-pdf').innerHTML;
+                  const originalContent = document.body.innerHTML;
+                  document.body.innerHTML = printContent;
+                  window.print();
+                  window.location.reload(); // Reload to restore React state cleanly
+                }}
+                className="btn btn-secondary"
+                style={{ padding: '0.55rem 1.25rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer', fontWeight: '600' }}
+              >
+                <Printer size={16} />
+                Print
+              </button>
+              <button 
+                onClick={() => { setPreviewOrder(null); setPreviewType(''); }}
+                className="btn"
+                style={{ padding: '0.5rem', borderRadius: '50%', cursor: 'pointer', backgroundColor: 'rgba(255,255,255,0.1)', border: 'none', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                <X size={16} />
+              </button>
             </div>
-          )}
+          </div>
 
-          {/* SUPPLIER SLIP (EXCLUDES TOTALS, INCLUDES UNIT PRICE & DETAILS) */}
-          {printType === 'supplier' && (
-            <div className="print-receipt-sheet supplier-sheet">
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #333', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
-                <div>
-                  <h1 style={{ fontSize: '1.75rem', fontWeight: '700', margin: 0 }}>Nish Fashion</h1>
-                  <p style={{ fontSize: '0.85rem', color: '#555', margin: '0.25rem 0 0 0' }}>Supplier Shipping Manifest</p>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: '700', margin: 0 }}>SUPPLIER SLIP</h3>
-                  <p style={{ fontSize: '0.85rem', color: '#555', margin: '0.25rem 0 0 0' }}>Order ID: {printOrder.id}</p>
-                </div>
-              </div>
-
-              <div style={{ marginBottom: '2rem', padding: '1rem', border: '1px solid #ccc', borderRadius: '0.5rem', backgroundColor: '#f9f9f9' }}>
-                <h5 style={{ fontSize: '0.85rem', color: '#666', textTransform: 'uppercase', marginBottom: '0.5rem', fontWeight: '700' }}>Delivery Address & Contact:</h5>
-                <p style={{ fontWeight: '700', fontSize: '1.15rem', margin: 0 }}>{printOrder.customerName}</p>
-                <p style={{ fontWeight: '700', fontSize: '1rem', margin: '0.25rem 0' }}>Phone: {printOrder.customerPhone}</p>
-                <p style={{ fontSize: '1rem', color: '#111', margin: 0, lineHeight: '1.5' }}>{printOrder.shippingAddress}</p>
-              </div>
-
-              <div style={{ borderBottom: '2px solid #333', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '70px 4fr 1.5fr 1fr', gap: '0.5rem', paddingBottom: '0.5rem', borderBottom: '1px solid #333', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase' }}>
-                  <span>Photo</span>
-                  <span>Product Specifications</span>
-                  <span style={{ textAlign: 'center' }}>Unit Price</span>
-                  <span style={{ textAlign: 'center' }}>Quantity</span>
-                </div>
-                
-                {printOrder.items?.map((item, idx) => (
-                  <div key={idx} style={{ display: 'grid', gridTemplateColumns: '70px 4fr 1.5fr 1fr', gap: '0.5rem', padding: '0.75rem 0', fontSize: '0.95rem', borderBottom: '1px dashed #ccc', alignItems: 'center' }}>
-                    <div style={{ width: '55px', height: '55px', borderRadius: '0.25rem', overflow: 'hidden', border: '1px solid #ccc', backgroundColor: '#f9f9f9' }}>
-                      {item.imageUrl ? (
-                        <img src={item.imageUrl} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      ) : (
-                        <div style={{ fontSize: '0.7rem', color: '#666', textAlign: 'center', marginTop: '15px' }}>No Img</div>
-                      )}
-                    </div>
-                    <div>
-                      <span style={{ fontWeight: '800', fontSize: '1.05rem' }}>{item.name}</span>
-                      {(item.selectedSize || item.selectedColor) && (
-                        <span style={{ display: 'block', fontSize: '0.8rem', color: '#333', marginTop: '0.25rem', fontWeight: '500' }}>
-                          {item.selectedSize ? `${item.sizeLabel || 'Size'}: ${item.selectedSize}` : ''}
-                          {item.selectedSize && item.selectedColor ? ' | ' : ''}
-                          {item.selectedColor ? `${item.colorLabel || 'Color'}: ${item.selectedColor}` : ''}
-                        </span>
-                      )}
-                    </div>
-                    <span style={{ textAlign: 'center', fontWeight: '600' }}>₹{item.price}</span>
-                    <span style={{ textAlign: 'center', fontWeight: '700', fontSize: '1.1rem' }}>{item.quantity}</span>
+          {/* Paper Sheet Preview Area */}
+          <div 
+            id="preview-sheet-to-pdf"
+            className="printable-receipt"
+            style={{
+              width: '100%',
+              maxWidth: '800px',
+              backgroundColor: '#ffffff',
+              color: '#000000',
+              padding: '40px',
+              borderRadius: '0.5rem',
+              boxShadow: '0 8px 30px rgba(0,0,0,0.5)',
+              boxSizing: 'border-box',
+              fontFamily: 'system-ui, -apple-system, sans-serif'
+            }}
+          >
+            {previewType === 'customer' ? (
+              <div style={{ background: '#ffffff', color: '#000000' }}>
+                {/* Header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #333333', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
+                  <div>
+                    <h1 style={{ fontSize: '1.75rem', fontWeight: '800', margin: 0, color: '#000000' }}>Nish Fashion</h1>
+                    <p style={{ fontSize: '0.85rem', color: '#555555', margin: '0.25rem 0 0 0' }}>Safi Store Receipt</p>
                   </div>
-                ))}
-              </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0, color: '#000000' }}>CUSTOMER RECEIPT</h3>
+                    <p style={{ fontSize: '0.85rem', color: '#555555', margin: '0.25rem 0 0 0' }}>Invoice ID: {previewOrder.id}</p>
+                  </div>
+                </div>
 
-              <div style={{ marginTop: '3rem', textAlign: 'center', fontSize: '0.85rem', color: '#666' }}>
-                <p>Please deliver the package carefully. Pack with secure materials.</p>
+                {/* Billed To / Invoice Details */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
+                  <div>
+                    <h5 style={{ fontSize: '0.85rem', color: '#666666', textTransform: 'uppercase', marginBottom: '0.5rem', fontWeight: '700' }}>Billed To:</h5>
+                    <p style={{ fontWeight: '800', fontSize: '1rem', margin: 0, color: '#000000' }}>{previewOrder.customerName}</p>
+                    <p style={{ fontSize: '0.9rem', margin: '0.25rem 0', color: '#000000' }}>Phone: {previewOrder.customerPhone}</p>
+                    <p style={{ fontSize: '0.9rem', color: '#333333', margin: 0, lineHeight: '1.4' }}>{previewOrder.shippingAddress}</p>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <h5 style={{ fontSize: '0.85rem', color: '#666666', textTransform: 'uppercase', marginBottom: '0.5rem', fontWeight: '700' }}>Invoice Details:</h5>
+                    <p style={{ fontSize: '0.9rem', margin: 0, color: '#000000' }}>Date: {formatOrderDate(previewOrder.createdAt)}</p>
+                    <p style={{ fontSize: '0.9rem', margin: '0.25rem 0', color: '#000000' }}>Payment: Verified UPI</p>
+                    <p style={{ fontSize: '0.9rem', margin: 0, color: '#000000' }}>Status: <strong style={{ color: '#2ecc71' }}>PAID</strong></p>
+                  </div>
+                </div>
+
+                {/* Items Table */}
+                <div style={{ borderBottom: '2px solid #333333', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '70px 3fr 1.2fr 1fr 1.2fr', gap: '0.5rem', paddingBottom: '0.5rem', borderBottom: '1px solid #333333', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', color: '#000000' }}>
+                    <span>Photo</span>
+                    <span>Item Description</span>
+                    <span style={{ textAlign: 'center' }}>Unit Price</span>
+                    <span style={{ textAlign: 'center' }}>Qty</span>
+                    <span style={{ textAlign: 'right' }}>Total Price</span>
+                  </div>
+                  
+                  {previewOrder.items?.map((item, idx) => (
+                    <div key={idx} style={{ display: 'grid', gridTemplateColumns: '70px 3fr 1.2fr 1fr 1.2fr', gap: '0.5rem', padding: '0.75rem 0', fontSize: '0.9rem', borderBottom: '1px dashed #cccccc', alignItems: 'center', color: '#000000' }}>
+                      <div style={{ width: '55px', height: '55px', borderRadius: '4px', overflow: 'hidden', border: '1px solid #cccccc', backgroundColor: '#f9f9f9' }}>
+                        {item.imageUrl ? (
+                          <img src={item.imageUrl} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          <div style={{ fontSize: '0.6rem', color: '#777777', textAlign: 'center', paddingTop: '15px' }}>No Img</div>
+                        )}
+                      </div>
+                      <div>
+                        <span style={{ fontWeight: '800', color: '#000000' }}>{item.name}</span>
+                        {(item.selectedSize || item.selectedColor) && (
+                          <span style={{ display: 'block', fontSize: '0.75rem', color: '#555555', marginTop: '2px' }}>
+                            {item.selectedSize ? `${item.sizeLabel || 'Size'}: ${item.selectedSize}` : ''}
+                            {item.selectedSize && item.selectedColor ? ' | ' : ''}
+                            {item.selectedColor ? `${item.colorLabel || 'Color'}: ${item.selectedColor}` : ''}
+                          </span>
+                        )}
+                      </div>
+                      <span style={{ textAlign: 'center' }}>₹{item.price}</span>
+                      <span style={{ textAlign: 'center' }}>{item.quantity}</span>
+                      <span style={{ textAlign: 'right', fontWeight: '800' }}>₹{item.price * item.quantity}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Summary */}
+                <div style={{ display: 'flex', justifyContent: 'flex-end', color: '#000000' }}>
+                  <div style={{ width: '250px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', margin: '0.35rem 0' }}>
+                      <span>Subtotal:</span>
+                      <span>₹{previewOrder.total}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', margin: '0.35rem 0' }}>
+                      <span>Shipping:</span>
+                      <span>Free</span>
+                    </div>
+                    <div style={{ height: '1px', background: '#333333', margin: '0.5rem 0' }}></div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.15rem', fontWeight: '800' }}>
+                      <span>Grand Total:</span>
+                      <span>₹{previewOrder.total}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-          )}
+            ) : (
+              <div style={{ background: '#ffffff', color: '#000000' }}>
+                {/* Supplier Slip Header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #333333', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
+                  <div>
+                    <h1 style={{ fontSize: '1.75rem', fontWeight: '800', margin: 0, color: '#000000' }}>Nish Fashion</h1>
+                    <p style={{ fontSize: '12px', color: '#555555', margin: '4px 0 0 0' }}>Supplier Shipping Manifest</p>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0, color: '#000000' }}>SUPPLIER SLIP</h3>
+                    <p style={{ fontSize: '12px', color: '#555555', margin: '4px 0 0 0' }}>Order ID: {previewOrder.id}</p>
+                  </div>
+                </div>
+
+                {/* Delivery details */}
+                <div style={{ marginBottom: '2rem', padding: '1rem', border: '1px solid #cccccc', borderRadius: '0.5rem', backgroundColor: '#f9f9f9' }}>
+                  <h5 style={{ fontSize: '12px', color: '#666666', textTransform: 'uppercase', marginBottom: '0.5rem', fontWeight: '700' }}>Delivery Address & Contact:</h5>
+                  <p style={{ fontWeight: '800', fontSize: '1.15rem', margin: 0, color: '#000000' }}>{previewOrder.customerName}</p>
+                  <p style={{ fontWeight: '800', fontSize: '1rem', margin: '0.25rem 0', color: '#000000' }}>Phone: {previewOrder.customerPhone}</p>
+                  <p style={{ fontSize: '1rem', color: '#111111', margin: 0, lineHeight: '1.5' }}>{previewOrder.shippingAddress}</p>
+                </div>
+
+                {/* Supplier Items table */}
+                <div style={{ borderBottom: '2px solid #333333', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '80px 3.5fr 1.2fr 1fr', gap: '0.5rem', paddingBottom: '0.5rem', borderBottom: '1px solid #333333', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', color: '#000000' }}>
+                    <span>Photo</span>
+                    <span>Product Specifications</span>
+                    <span style={{ textAlign: 'center' }}>Unit Price</span>
+                    <span style={{ textAlign: 'center' }}>Quantity</span>
+                  </div>
+                  
+                  {previewOrder.items?.map((item, idx) => (
+                    <div key={idx} style={{ display: 'grid', gridTemplateColumns: '80px 3.5fr 1.2fr 1fr', gap: '0.5rem', padding: '0.75rem 0', fontSize: '0.95rem', borderBottom: '1px dashed #cccccc', alignItems: 'center', color: '#000000' }}>
+                      <div style={{ width: '60px', height: '60px', borderRadius: '4px', overflow: 'hidden', border: '1px solid #cccccc', backgroundColor: '#f9f9f9' }}>
+                        {item.imageUrl ? (
+                          <img src={item.imageUrl} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          <div style={{ fontSize: '0.6rem', color: '#777777', textAlign: 'center', paddingTop: '15px' }}>No Img</div>
+                        )}
+                      </div>
+                      <div>
+                        <span style={{ fontWeight: '800', color: '#000000' }}>{item.name}</span>
+                        {(item.selectedSize || item.selectedColor) && (
+                          <span style={{ display: 'block', fontSize: '0.8rem', color: '#333333', marginTop: '4px', fontWeight: '500' }}>
+                            {item.selectedSize ? `${item.sizeLabel || 'Size'}: ${item.selectedSize}` : ''}
+                            {item.selectedSize && item.selectedColor ? ' | ' : ''}
+                            {item.selectedColor ? `${item.colorLabel || 'Color'}: ${item.selectedColor}` : ''}
+                          </span>
+                        )}
+                      </div>
+                      <span style={{ textAlign: 'center' }}>₹{item.price}</span>
+                      <span style={{ textAlign: 'center', fontWeight: '700' }}>{item.quantity}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{ marginTop: '3rem', textAlign: 'center', fontSize: '0.85rem', color: '#666666' }}>
+                  <p>Please deliver the package carefully. Pack with secure materials.</p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
-      {/* PRINT STYLES */}
-      <style>{`
-        .print-overlay {
-          display: none;
-        }
-        
-        @media print {
-          body * {
-            visibility: hidden;
-            background: none !important;
-          }
-          .print-overlay, .print-overlay * {
-            visibility: visible;
-          }
-          .print-overlay {
-            display: block !important;
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            padding: 0;
-            background: white !important;
-            color: black !important;
-          }
-          .print-receipt-sheet {
-            width: 100%;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 2rem;
-            box-sizing: border-box;
-            background: white !important;
-            color: black !important;
-          }
-          .customer-sheet {
-            border: none;
-          }
-          .supplier-sheet {
-            border: none;
-          }
-        }
-      `}</style>
-      
-
-
       {/* Floating status alert during download */}
       {downloading && (
-        <div style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 1000, background: 'var(--accent-color)', color: 'black', padding: '0.75rem 1.5rem', borderRadius: '0.5rem', fontWeight: 'bold', boxShadow: 'var(--shadow-lg)' }}>
+        <div style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 3000, background: 'var(--accent-color)', color: 'black', padding: '0.75rem 1.5rem', borderRadius: '0.5rem', fontWeight: 'bold', boxShadow: 'var(--shadow-lg)' }}>
           Generating Receipt PDF...
         </div>
       )}
