@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useState, useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from './firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 // Context (to be created)
 // import { CartProvider } from './context/CartContext';
@@ -36,15 +36,25 @@ function App() {
       setUser(currentUser);
       if (currentUser) {
         try {
-          const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+          const userDocRef = doc(db, "users", currentUser.uid);
+          const userDoc = await getDoc(userDocRef);
+          
           if (userDoc.exists()) {
-            setUserRole(userDoc.data().role);
+            let role = userDoc.data().role;
+            // Force update database role to admin if it's the admin email but not set to admin
+            if (currentUser.email && currentUser.email.toLowerCase() === 'safeekestore@gmail.com' && role !== 'admin') {
+              await setDoc(userDocRef, { role: 'admin' }, { merge: true });
+              role = 'admin';
+            }
+            setUserRole(role);
           } else {
-            setUserRole('user');
+            // Document doesn't exist yet, but if it's the admin email, set role to admin
+            const initialRole = (currentUser.email && currentUser.email.toLowerCase() === 'safeekestore@gmail.com') ? 'admin' : 'user';
+            setUserRole(initialRole);
           }
         } catch (error) {
           console.error("Error fetching user role:", error);
-          setUserRole('user');
+          setUserRole(currentUser.email && currentUser.email.toLowerCase() === 'safeekestore@gmail.com' ? 'admin' : 'user');
         }
       } else {
         setUserRole(null);
