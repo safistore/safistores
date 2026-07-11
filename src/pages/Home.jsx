@@ -2,18 +2,18 @@ import { useState, useEffect, useRef } from 'react';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '../firebase';
 import ProductCard from '../components/ProductCard';
-import QuickViewModal from '../components/QuickViewModal';
 import safiLogo from '../assets/safi.png';
 import { ChevronLeft, ChevronRight, ShoppingBag } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   
   // Carousel State
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
   
   const autoPlayRef = useRef(null);
 
@@ -167,7 +167,7 @@ const Home = () => {
                   
                   <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                     <button 
-                      onClick={() => setSelectedProduct(products[currentSlide])} 
+                      onClick={() => navigate(`/product/${products[currentSlide].id}`)} 
                       className="btn btn-accent"
                       style={{ padding: '0.85rem 2rem', fontSize: '1rem', fontWeight: '600' }}
                     >
@@ -260,14 +260,7 @@ const Home = () => {
         )}
       </section>
 
-      {/* Global Quick View Modal integration for Carousel */}
-      {selectedProduct && (
-        <QuickViewModal 
-          product={selectedProduct} 
-          isOpen={!!selectedProduct} 
-          onClose={() => setSelectedProduct(null)} 
-        />
-      )}
+      {/* Global Quick View Modal removed */}
 
       {/* Styles for Carousel animation & responsiveness */}
       <style>{`
