@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { createUserWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 import { auth, db, googleProvider } from '../firebase';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 
@@ -35,6 +35,8 @@ const Signup = ({ user }) => {
           role: loggedUser.email.toLowerCase() === 'safeekestore@gmail.com' ? 'admin' : 'user',
           createdAt: new Date().toISOString()
         });
+      } else if (loggedUser.email.toLowerCase() === 'safeekestore@gmail.com') {
+        await updateDoc(userDocRef, { role: 'admin' });
       }
       navigate('/');
     } catch (err) {
