@@ -1,34 +1,35 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Reem+Kufi:wght@500;600;700&display=swap');
 
 :root {
-  --bg-primary: #ffffff;
-  --bg-secondary: #f4f4f5;
-  --text-primary: #18181b;
-  --text-secondary: #71717a;
-  --accent-color: #d4af37; /* Elegant Gold */
-  --accent-hover: #b5952f;
-  --danger: #ef4444;
-  --success: #10b981;
+  --bg-primary: #faf9f6; /* Warm Alabaster White */
+  --bg-secondary: #f4f3ef; /* Warm Cream Grey */
+  --text-primary: #121212; /* Deep Ink Black */
+  --text-secondary: #5a5a5a; /* Muted Slate Grey */
+  --accent-color: #c5a880; /* Champagne Gold */
+  --accent-hover: #b3946b; /* Deeper Gold */
+  --danger: #d93838;
+  --success: #28a745;
   
-  --border-color: #e4e4e7;
-  --card-bg: rgba(255, 255, 255, 0.8);
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --glass-border: 1px solid rgba(255, 255, 255, 0.5);
-  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  --border-color: rgba(18, 18, 18, 0.08);
+  --card-bg: rgba(250, 249, 246, 0.85);
+  --shadow-sm: 0 2px 8px rgba(18, 18, 18, 0.02);
+  --shadow-md: 0 8px 24px rgba(18, 18, 18, 0.04);
+  --shadow-lg: 0 16px 40px rgba(18, 18, 18, 0.06);
+  --glass-border: 1px solid rgba(18, 18, 18, 0.06);
+  --glass-shadow: 0 8px 32px rgba(18, 18, 18, 0.03);
 }
 
 /* Dark Mode Palette */
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg-primary: #09090b;
-    --bg-secondary: #18181b;
-    --text-primary: #fafafa;
-    --text-secondary: #a1a1aa;
-    --border-color: #27272a;
-    --card-bg: rgba(24, 24, 27, 0.7);
-    --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+    --bg-primary: #0a0a0a; /* Obsidian Dark */
+    --bg-secondary: #121212; /* Charcoal */
+    --text-primary: #f5f5f5; /* Off-White text */
+    --text-secondary: #9e9e9e; /* Muted text */
+    --border-color: rgba(245, 245, 245, 0.08);
+    --card-bg: rgba(18, 18, 18, 0.85);
+    --glass-border: 1px solid rgba(245, 245, 245, 0.06);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   }
 }
 
@@ -44,7 +45,7 @@ body {
   color: var(--text-primary);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.4s ease, color 0.4s ease;
 }
 
 a {
@@ -77,10 +78,13 @@ button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem 1.5rem;
+  padding: 0.8rem 1.75rem;
   border-radius: 9999px; /* Pill shape for premium feel */
-  font-weight: 500;
-  transition: all 0.3s ease;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   gap: 0.5rem;
 }
 
@@ -94,7 +98,7 @@ button {
   background-color: var(--accent-color);
   color: #fff;
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 12px 24px -10px rgba(197, 168, 128, 0.5);
 }
 
 .btn-secondary {
@@ -105,6 +109,7 @@ button {
 
 .btn-secondary:hover {
   border-color: var(--text-primary);
+  background-color: rgba(18, 18, 18, 0.02);
 }
 
 .btn-accent {
@@ -115,6 +120,7 @@ button {
 .btn-accent:hover {
   background-color: var(--accent-hover);
   transform: translateY(-2px);
+  box-shadow: 0 12px 24px -10px rgba(197, 168, 128, 0.5);
 }
 
 /* Forms */
@@ -143,19 +149,24 @@ button {
 .form-input:focus {
   outline: none;
   border-color: var(--accent-color);
-  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2);
+  box-shadow: 0 0 0 2px rgba(197, 168, 128, 0.2);
 }
 
 /* Glassmorphism Cards */
 .glass-card {
   background: var(--card-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: var(--glass-border);
   border-radius: 1rem;
   box-shadow: var(--glass-shadow);
   padding: 2rem;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease;
+}
+
+.glass-card:hover {
+  border-color: var(--accent-color);
+  box-shadow: var(--shadow-lg), 0 0 0 1px var(--accent-color);
 }
 
 /* Layouts */
@@ -258,4 +269,27 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: 0.05em;
   background-color: var(--accent-color);
   color: white;
+}
+
+/* Product Card Custom Image Zoom Transitions */
+.product-card-img-wrapper {
+  width: 100%;
+  height: 200px;
+  background-color: var(--bg-secondary);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.product-card-img-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover .product-card-img-wrapper img {
+  transform: scale(1.08);
 }
