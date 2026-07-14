@@ -13,24 +13,15 @@ const ProductCard = ({ product }) => {
       className="glass-card flex-center" 
       style={{ 
         flexDirection: 'column', 
-        padding: '1rem', 
+        padding: '1.25rem', 
         gap: '1rem',
-        cursor: 'pointer',
-        transition: 'transform 0.2s, box-shadow 0.2s'
+        cursor: 'pointer'
       }}
       onClick={handleCardClick}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'translateY(-4px)';
-        e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'none';
-        e.currentTarget.style.boxShadow = 'var(--glass-shadow)';
-      }}
     >
-      <div style={{ width: '100%', height: '200px', backgroundColor: 'var(--bg-secondary)', borderRadius: '0.5rem', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="product-card-img-wrapper">
         {product.imageUrl ? (
-          <img src={product.imageUrl} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img src={product.imageUrl} alt={product.name} />
         ) : (
           <span style={{ color: 'var(--text-secondary)' }}>No Image</span>
         )}
