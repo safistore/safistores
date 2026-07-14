@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useCart } from '../context/CartContext';
-import { ArrowLeft, ShoppingCart, Check, Play, Volume2, VolumeX } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, Check, Play, Volume2, VolumeX, ShieldAlert } from 'lucide-react';
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -21,6 +21,16 @@ const ProductDetails = () => {
   
   // Video volume toggle
   const [isMuted, setIsMuted] = useState(true);
+
+  // Modern Toast notification state
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast({ show: false, message: '', type: 'success' });
+    }, 2500);
+  };
 
   const galleryRef = useRef(null);
 
@@ -99,11 +109,11 @@ const ProductDetails = () => {
 
   const handleAddToCart = () => {
     if (product.sizes && product.sizes.length > 0 && !selectedSize) {
-      alert(`Please select a ${product.sizeLabel || 'Size'}`);
+      showToast(`Please select a ${product.sizeLabel || 'Size'}`, 'warning');
       return;
     }
     if (product.colors && product.colors.length > 0 && !selectedColor) {
-      alert(`Please select a ${product.colorLabel || 'Color'}`);
+      showToast(`Please select a ${product.colorLabel || 'Color'}`, 'warning');
       return;
     }
 
@@ -121,8 +131,8 @@ const ProductDetails = () => {
       imageUrl: currentMedia.type === 'image' ? currentMedia.url : (product.imageUrl || (mediaList.find(m => m.type === 'image')?.url) || '')
     };
 
-    addToCart(cartProduct);
-    alert('Product added to cart!');
+    addToCart(cartProduct, selectedSize, selectedColor, quantity);
+    showToast('Added to cart successfully!', 'success');
   };
 
   if (loading) {
@@ -429,6 +439,31 @@ const ProductDetails = () => {
           }
         }
       `}</style>
+
+      {/* Modern Toast Overlay */}
+      {toast.show && (
+        <div className="animate-fade-in flex-center" style={{
+          position: 'fixed',
+          top: '24px',
+          right: '24px',
+          left: '24px',
+          margin: '0 auto',
+          maxWidth: '350px',
+          backgroundColor: toast.type === 'success' ? '#10b981' : '#ef4444',
+          color: '#ffffff',
+          padding: '0.85rem 1.5rem',
+          borderRadius: '9999px',
+          zIndex: 3000,
+          fontWeight: '600',
+          gap: '0.5rem',
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.25)',
+          textAlign: 'center',
+          fontSize: '0.9rem'
+        }}>
+          {toast.type === 'success' ? <Check size={18} /> : <ShieldAlert size={18} />}
+          <span>{toast.message}</span>
+        </div>
+      )}
     </div>
   );
 };
