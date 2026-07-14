@@ -15,20 +15,24 @@ export const CartProvider = ({ children }) => {
   }, [cart]);
 
   const addToCart = (product, selectedSize = null, selectedColor = null, quantityToAdd = 1) => {
-    const cartItemId = `${product.id}-${selectedSize || ''}-${selectedColor || ''}`;
+    const size = selectedSize !== null ? selectedSize : (product.selectedSize || null);
+    const color = selectedColor !== null ? selectedColor : (product.selectedColor || null);
+    const qty = (product.quantity && quantityToAdd === 1) ? product.quantity : quantityToAdd;
+    
+    const cartItemId = `${product.id}-${size || ''}-${color || ''}`;
     setCart((prev) => {
       const existing = prev.find((item) => item.cartItemId === cartItemId);
       if (existing) {
         return prev.map((item) =>
-          item.cartItemId === cartItemId ? { ...item, quantity: item.quantity + quantityToAdd } : item
+          item.cartItemId === cartItemId ? { ...item, quantity: item.quantity + qty } : item
         );
       }
       return [...prev, { 
         ...product, 
         cartItemId, 
-        selectedSize, 
-        selectedColor, 
-        quantity: quantityToAdd 
+        selectedSize: size, 
+        selectedColor: color, 
+        quantity: qty 
       }];
     });
   };
