@@ -3,7 +3,7 @@ import { useCart } from '../context/CartContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { collection, addDoc, doc, onSnapshot } from 'firebase/firestore';
 import { db, auth } from '../firebase';
-import { CheckCircle2, Copy, RefreshCw, Printer, ShieldAlert, Clock, ArrowRight } from 'lucide-react';
+import { CheckCircle2, Copy, RefreshCw, Printer, ShieldAlert, Clock, ArrowRight, Download } from 'lucide-react';
 
 const Checkout = () => {
   const { cart, cartTotal, clearCart } = useCart();
@@ -22,6 +22,10 @@ const Checkout = () => {
   const [timeLeft, setTimeLeft] = useState(300);
   const [timerExpired, setTimerExpired] = useState(false);
   const timerRef = useRef(null);
+  
+  // Purchased order snapshot for persistent success receipt rendering
+  const [purchasedOrderDetails, setPurchasedOrderDetails] = useState(null);
+  const [downloading, setDownloading] = useState(false);
 
   const handleCopyUpi = () => {
     navigator.clipboard.writeText('9345314960@axl');
@@ -38,6 +42,7 @@ const Checkout = () => {
         if (data) {
           if (data.status === 'Completed' || data.status === 'Paid' || data.status === 'Shipped') {
             clearInterval(timerRef.current);
+            setPurchasedOrderDetails(data);
             setCheckoutStep('success');
             clearCart();
           } else if (data.status === 'Cancelled' || data.status === 'Rejected') {
@@ -170,6 +175,48 @@ Please approve my order here: https://safistores.vercel.app/admin`;
 
   const handlePrintReceipt = () => {
     window.print();
+  };
+
+  const handleDownloadPDF = () => {
+    const element = document.querySelector('.printable-receipt');
+    if (!element) return;
+    
+    setDownloading(true);
+    
+    const opt = {
+      margin:       10,
+      filename:     `Order_Receipt_${orderId}.pdf`,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true, logging: false },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    
+    const triggerDownload = () => {
+      window.html2pdf()
+        .from(element)
+        .set(opt)
+        .save()
+        .then(() => {
+          setDownloading(false);
+        })
+        .catch((err) => {
+          console.error("PDF generation error:", err);
+          setDownloading(false);
+        });
+    };
+
+    if (window.html2pdf) {
+      triggerDownload();
+    } else {
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+      script.onload = triggerDownload;
+      script.onerror = () => {
+        alert("Failed to load PDF library. Please check your internet connection.");
+        setDownloading(false);
+      };
+      document.body.appendChild(script);
+    }
   };
 
   return (
@@ -396,12 +443,21 @@ Please approve my order here: https://safistores.vercel.app/admin`;
             <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
               Thank you! Your transaction was approved by our team. Your order details are below.
             </p>
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-              <button onClick={handlePrintReceipt} className="btn btn-secondary" style={{ cursor: 'pointer' }}>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button 
+                onClick={handleDownloadPDF} 
+                className="btn btn-accent" 
+                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem', fontWeight: '600' }}
+                disabled={downloading}
+              >
+                <Download size={18} />
+                {downloading ? 'Downloading...' : 'Download PDF'}
+              </button>
+              <button onClick={handlePrintReceipt} className="btn btn-secondary" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem', fontWeight: '600' }}>
                 <Printer size={18} />
                 Print Receipt
               </button>
-              <Link to="/orders" className="btn btn-primary">
+              <Link to="/orders" className="btn btn-primary" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.35rem', fontWeight: '600' }}>
                 View Order History
               </Link>
             </div>
@@ -411,25 +467,25 @@ Please approve my order here: https://safistores.vercel.app/admin`;
           <div className="glass-card printable-receipt" style={{ padding: '2.5rem', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)' }}>
             <div className="flex-between" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '1.5rem', marginBottom: '1.5rem' }}>
               <div>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--accent-color)' }}>Nish Fashion</h1>
+                <h1 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--accent-color)' }}>Nish Fashion</h1>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>Safi Store Receipt</p>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <h4 style={{ fontSize: '1rem', margin: 0 }}>INVOICE BILL</h4>
+                <h4 style={{ fontSize: '1rem', margin: 0, fontWeight: '700' }}>INVOICE BILL</h4>
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>ID: {orderId}</p>
               </div>
             </div>
 
-            <div className="grid-cols-2" style={{ gap: '2rem', marginBottom: '2rem' }}>
+            <div className="invoice-info-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
               <div>
                 <h5 style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Billed To:</h5>
-                <p style={{ fontWeight: '600', margin: 0 }}>{name}</p>
-                <p style={{ fontSize: '0.875rem', margin: '0.25rem 0' }}>{phone}</p>
-                <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>{address}</p>
+                <p style={{ fontWeight: '600', margin: 0 }}>{purchasedOrderDetails?.customerName || name}</p>
+                <p style={{ fontSize: '0.875rem', margin: '0.25rem 0' }}>{purchasedOrderDetails?.customerPhone || phone}</p>
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>{purchasedOrderDetails?.shippingAddress || address}</p>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <h5 style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Details:</h5>
-                <p style={{ fontSize: '0.875rem', margin: 0 }}>Date: {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                <p style={{ fontSize: '0.875rem', margin: 0 }}>Date: {purchasedOrderDetails?.createdAt ? new Date(purchasedOrderDetails.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                 <p style={{ fontSize: '0.875rem', margin: '0.25rem 0' }}>Payment: Verified UPI</p>
                 <p style={{ fontSize: '0.875rem', margin: 0 }}>Status: <strong style={{ color: 'var(--success)' }}>PAID</strong></p>
               </div>
@@ -437,7 +493,7 @@ Please approve my order here: https://safistores.vercel.app/admin`;
 
             {/* Items Table */}
             <div style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '1.5rem', marginBottom: '1.5rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '60px 3fr 1fr 1fr 1fr', gap: '0.5rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '600' }}>
+              <div className="invoice-table-header" style={{ display: 'grid', gridTemplateColumns: '60px 3fr 1fr 1fr 1fr', gap: '0.5rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '600' }}>
                 <span>Photo</span>
                 <span>Item Name</span>
                 <span style={{ textAlign: 'center' }}>Price</span>
@@ -445,8 +501,8 @@ Please approve my order here: https://safistores.vercel.app/admin`;
                 <span style={{ textAlign: 'right' }}>Total</span>
               </div>
               
-              {cart.map((item, idx) => (
-                <div key={idx} style={{ display: 'grid', gridTemplateColumns: '60px 3fr 1fr 1fr 1fr', gap: '0.5rem', padding: '0.75rem 0', fontSize: '0.9rem', borderBottom: '1px dotted var(--border-color)', alignItems: 'center' }}>
+              {(purchasedOrderDetails?.items || []).map((item, idx) => (
+                <div key={idx} className="invoice-row" style={{ display: 'grid', gridTemplateColumns: '60px 3fr 1fr 1fr 1fr', gap: '0.5rem', padding: '0.75rem 0', fontSize: '0.9rem', borderBottom: '1px dotted var(--border-color)', alignItems: 'center' }}>
                   <div style={{ width: '45px', height: '45px', borderRadius: '0.25rem', overflow: 'hidden', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)' }}>
                     {item.imageUrl ? (
                       <img src={item.imageUrl} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -464,9 +520,15 @@ Please approve my order here: https://safistores.vercel.app/admin`;
                       </span>
                     )}
                   </div>
-                  <span style={{ textAlign: 'center' }}>₹{item.price}</span>
-                  <span style={{ textAlign: 'center' }}>{item.quantity}</span>
-                  <span style={{ textAlign: 'right', fontWeight: '500' }}>₹{item.price * item.quantity}</span>
+                  <span className="desktop-only-cell" style={{ textAlign: 'center' }}>₹{item.price}</span>
+                  <span className="desktop-only-cell" style={{ textAlign: 'center' }}>{item.quantity}</span>
+                  <span className="price-total-cell" style={{ textAlign: 'right', fontWeight: '500' }}>₹{item.price * item.quantity}</span>
+                  
+                  {/* Mobile details block (shown only on mobile) */}
+                  <div className="mobile-only-row-details">
+                    <span>₹{item.price} x {item.quantity}</span>
+                    <span style={{ fontWeight: '600' }}>Total: ₹{item.price * item.quantity}</span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -475,7 +537,7 @@ Please approve my order here: https://safistores.vercel.app/admin`;
               <div style={{ width: '250px' }}>
                 <div className="flex-between" style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
                   <span>Subtotal:</span>
-                  <span>₹{cartTotal}</span>
+                  <span>₹{purchasedOrderDetails?.total || cartTotal}</span>
                 </div>
                 <div className="flex-between" style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
                   <span>Shipping:</span>
@@ -484,7 +546,7 @@ Please approve my order here: https://safistores.vercel.app/admin`;
                 <div style={{ height: '1px', background: 'var(--border-color)', margin: '0.5rem 0' }}></div>
                 <div className="flex-between" style={{ fontSize: '1.15rem', fontWeight: '700' }}>
                   <span>Grand Total:</span>
-                  <span style={{ color: 'var(--accent-color)' }}>₹{cartTotal}</span>
+                  <span style={{ color: 'var(--accent-color)' }}>₹{purchasedOrderDetails?.total || cartTotal}</span>
                 </div>
               </div>
             </div>
@@ -520,11 +582,53 @@ Please approve my order here: https://safistores.vercel.app/admin`;
         </div>
       )}
 
-      {/* Helper CSS styles for timer spin and receipt printing */}
+      {/* Helper CSS styles for timer spin, receipt printing and mobile responsive invoice */}
       <style>{`
         @keyframes spin {
           100% { transform: rotate(360deg); }
         }
+        
+        @media (max-width: 600px) {
+          .invoice-table-header {
+            display: none !important;
+          }
+          .invoice-row {
+            grid-template-columns: 55px 1fr !important;
+            grid-template-rows: auto auto !important;
+            gap: 0.5rem !important;
+          }
+          .desktop-only-cell {
+            display: none !important;
+          }
+          .price-total-cell {
+            display: none !important;
+          }
+          .mobile-only-row-details {
+            grid-column: span 2;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+            padding-top: 0.25rem;
+            border-top: 1px dotted var(--border-color);
+          }
+          .invoice-info-grid {
+            grid-template-columns: 1fr !important;
+            gap: 1.5rem !important;
+          }
+          .invoice-info-grid > div:last-child {
+            text-align: left !important;
+            margin-top: 1rem;
+          }
+        }
+        
+        @media (min-width: 601px) {
+          .mobile-only-row-details {
+            display: none !important;
+          }
+        }
+
         @media print {
           body * {
             visibility: hidden;
